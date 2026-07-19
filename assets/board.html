@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACE - Personal Site</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #000000;
+        text-align: center;
+        font-family: 'Courier New', monospace;
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+
+      /* Matrix Canvas Background */
+      #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      /* Content overlay */
+      .content-wrapper {
+        position: relative;
+        z-index: 1;
+        padding: 40px 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      h1 {
+        color: rgb(240, 240, 255);
+        text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00;
+        font-size: 3rem;
+        letter-spacing: 8px;
+        margin-bottom: 10px;
+        font-family: 'Courier New', monospace;
+      }
+
+      h2 {
+        color: #ff6600;
+        text-shadow: 0 0 10px #ff6600, 0 0 20px #ff3300;
+        margin-bottom: 30px;
+        font-size: 1.4rem;
+        min-height: 1.8em;
+        letter-spacing: 2px;
+      }
+
+      h2 .cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1em;
+        background: #ff6600;
+        margin-left: 2px;
+        vertical-align: text-bottom;
+        animation: blink 0.7s step-end infinite;
+      }
+
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+
+      img {
+        border-radius: 50%;
+        border: 4px solid #00ff00;
+        width: 300px;
+        height: 300px;
+        object-fit: cover;
+        box-shadow: 0 0 30px #00ff00, 0 0 60px rgba(0, 255, 0, 0.3);
+        cursor: pointer;
+        transition: box-shadow 0.3s, transform 0.3s;
+        margin-bottom: 30px;
+      }
+
+      img:hover {
+        box-shadow: 0 0 50px #00ff00, 0 0 100px rgba(0, 255, 0, 0.5);
+        transform: scale(1.05);
+      }
+
+      a {
+        text-decoration: none;
+        display: inline-block;
+        margin: 8px 0;
+      }
+
+      @keyframes lrm {
+        0% { transform: translateX(20px); }
+        100% { transform: translateX(-20px); }
+      }
+
+      @keyframes glitch {
+        0% { text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
+        20% { text-shadow: -2px 0 #ff0000, 2px 0 #00ffff, 0 0 20px #00ff00; }
+        40% { text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
+        60% { text-shadow: 2px 0 #ff0000, -2px 0 #00ffff, 0 0 20px #00ff00; }
+        80% { text-shadow: 0 0 30px #00ff00, 0 0 60px #00ff00; }
+        100% { text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
+      }
+
+      @keyframes scanline {
+        0% { top: -100%; }
+        100% { top: 100%; }
+      }
+
+      a h3, a h4, a h5, a h6 {
+        animation: lrm 1.5s ease-in-out infinite alternate, glitch 3s infinite;
+        color: #00ff00;
+        text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+        font-family: 'Courier New', monospace;
+        padding: 10px 24px;
+        border: 1px solid rgba(0, 255, 0, 0.3);
+        border-radius: 4px;
+        background: rgba(0, 255, 0, 0.05);
+        transition: background 0.3s, box-shadow 0.3s;
+        font-size: 1rem;
+      }
+
+      a h3:hover, a h4:hover, a h5:hover, a h6:hover {
+        background: rgba(0, 255, 0, 0.15);
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.4), inset 0 0 20px rgba(0, 255, 0, 0.1);
+      }
+
+      /* Scanline overlay effect */
+      .scanline-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.15) 0px,
+          rgba(0, 0, 0, 0.15) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+      }
+
+      /* Moving scanline bar */
+      .scanline-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(to bottom, transparent, rgba(0, 255, 0, 0.15), transparent);
+        z-index: 3;
+        pointer-events: none;
+        animation: scanline 4s linear infinite;
+      }
+
+      .fake-alert {
+        background-color: rgb(22, 21, 21);
+        color: red;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        border: 2px solid red;
+        box-shadow: 0 0 25px #ff3333;
+        padding: 10px 20px;
+        font-weight: bold;
+        border-radius: 5px;
+        transform: scale(0.1);
+        opacity: 0;
+        transition: all 0.5s;
+        z-index: 10;
+        font-family: 'Courier New', monospace;
+      }
+
+      /* ===== Cyberpunk Message Board ===== */
+
+      /* Message list container */
+      .msg-list {
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto 24px auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .msg-item {
+        background: rgba(0, 255, 255, 0.06);
+        border: 1px solid rgba(0, 255, 255, 0.25);
+        border-left: 3px solid #00ffff;
+        border-radius: 4px;
+        padding: 10px 16px;
+        color: #b0f0f0;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        text-align: left;
+        text-shadow: 0 0 4px rgba(0, 255, 255, 0.3);
+        animation: msgFadeIn 0.6s ease-out both;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+      }
+
+      .msg-item .msg-name {
+        color: #00ffff;
+        font-weight: bold;
+        text-shadow: 0 0 6px rgba(0, 255, 255, 0.5);
+        margin-right: 8px;
+      }
+
+      .msg-item .msg-text {
+        color: #c0e8e8;
+      }
+
+      @keyframes msgFadeIn {
+        0% {
+          opacity: 0;
+          transform: translateY(12px) scale(0.97);
+          filter: blur(4px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          filter: blur(0);
+        }
+      }
+
+      /* Form container */
+      .cyber-form {
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
+        background: rgba(10, 10, 20, 0.75);
+        border: 1px solid rgba(0, 255, 255, 0.4);
+        border-radius: 6px;
+        padding: 24px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow:
+          0 0 15px rgba(0, 255, 255, 0.15),
+          0 0 40px rgba(0, 255, 255, 0.05),
+          inset 0 0 30px rgba(0, 255, 255, 0.03);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cyber-form::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00ffff, transparent);
+        animation: cyberScanline 3s linear infinite;
+      }
+
+      @keyframes cyberScanline {
+        0% { left: -100%; }
+        100% { left: 100%; }
+      }
+
+      .cyber-form input {
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(0, 255, 255, 0.25);
+        border-radius: 4px;
+        padding: 10px 14px;
+        color: #e0ffff;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+
+      .cyber-form input::placeholder {
+        color: rgba(0, 255, 255, 0.35);
+      }
+
+      .cyber-form input:focus {
+        border-color: #00ffff;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3), inset 0 0 8px rgba(0, 255, 255, 0.05);
+      }
+
+      .cyber-form button {
+        background: transparent;
+        border: 1px solid #00ffff;
+        border-radius: 4px;
+        padding: 10px 20px;
+        color: #00ffff;
+        font-family: 'Courier New', monospace;
+        font-size: 0.95rem;
+        font-weight: bold;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        text-shadow: 0 0 6px rgba(0, 255, 255, 0.5);
+      }
+
+      .cyber-form button:hover {
+        background: rgba(0, 255, 255, 0.12);
+        color: #ffffff;
+        border-color: #00ffff;
+        box-shadow:
+          0 0 15px rgba(0, 255, 255, 0.5),
+          0 0 40px rgba(0, 255, 255, 0.25),
+          inset 0 0 20px rgba(0, 255, 255, 0.1);
+        text-shadow: 0 0 12px rgba(0, 255, 255, 0.9);
+        transform: translateY(-1px);
+      }
+
+      .cyber-form button:active {
+        transform: translateY(0);
+        box-shadow:
+          0 0 8px rgba(0, 255, 255, 0.4),
+          inset 0 0 15px rgba(0, 255, 255, 0.15);
+      }
+
+      /* Section title for message board */
+      .msg-title {
+        color: #00ffff;
+        font-family: 'Courier New', monospace;
+        font-size: 1.1rem;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.6), 0 0 20px rgba(0, 255, 255, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Matrix Digital Rain Canvas -->
+    <canvas id="matrix-canvas"></canvas>
+
+    <!-- Scanline Effects -->
+    <div class="scanline-overlay"></div>
+    <div class="scanline-bar"></div>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+      <h1>ACE</h1>
+      <h2><span id="typewriter-text"></span><span class="cursor"></span></h2>
+      <img src="https://down.anticheatexpert.com/static/iegssibox/ace-domestic-web/idc_3059_oper/2607171410/img/ace-logo.33bf637.svg" onclick="hca()" />
+      <a href="https://www.anticheatexpert.com/">
+        <h3>💖点击传送：进入ACE官网💖</h3>
+      </a>
+      <a href="https://down.anticheatexpert.com/docs/ACE-files/wsa/ACE_Keeper.zip">
+        <h4>💖点击传送：下载ACE Windows版💖</h4>
+      </a>
+      <a href="https://down.anticheatexpert.com/docs/ACE-files/wsa/ACEKeeper_1.0.0.10.dmg">
+        <h5>💖点击传送：下载ACE Mac M1版💖</h5>
+      </a>
+      <a href="https://gamesafe.qq.com/safety-online.shtml">
+        <h6>💖点击传送：进入ACE在线查询💖</h6>
+      </a>
+      
+      <div class="msg-title">// MESSAGE_BOARD</div>
+      <div class="msg-list">
+        {%for m in messages%}
+        <div class="msg-item" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+          <span class="msg-name">&gt; {{m.name}}</span>
+          <span class="msg-text">{{m.msg}}</span>
+        </div>
+        {%endfor%}
+      </div>
+
+      <form action="/post" method="POST" class="cyber-form">
+        <input name="name" placeholder="&gt; 输入你的名字..." />
+        <input name="message" placeholder="&gt; 说点什么..." />
+        <button type="submit">[ 发送留言 ]</button>
+      </form>
+    </div>
+
+    <script>
+      // ========== Typewriter Effect for Subtitle ==========
+      (function () {
+        var text = 'NB\u5230\u7206';
+        var el = document.getElementById('typewriter-text');
+        var charIndex = 0;
+        var isDeleting = false;
+        var typeSpeed = 150;
+        var deleteSpeed = 100;
+        var pauseAfterComplete = 1000;
+
+        function typewrite() {
+          if (!isDeleting) {
+            // Typing phase
+            charIndex++;
+            el.textContent = text.substring(0, charIndex);
+            if (charIndex === text.length) {
+              // Finished typing, pause then start deleting
+              isDeleting = true;
+              setTimeout(typewrite, pauseAfterComplete);
+              return;
+            }
+            setTimeout(typewrite, typeSpeed);
+          } else {
+            // Deleting phase
+            charIndex--;
+            el.textContent = text.substring(0, charIndex);
+            if (charIndex === 0) {
+              // Finished deleting, pause then start typing
+              isDeleting = false;
+              setTimeout(typewrite, 400);
+              return;
+            }
+            setTimeout(typewrite, deleteSpeed);
+          }
+        }
+
+        typewrite();
+      })();
+
+      // ========== Matrix Digital Rain Effect ==========
+      (function () {
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas to full screen
+        function resizeCanvas() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Matrix characters (katakana + numbers + latin)
+        const matrixChars = '0123456789';
+        const fontSize = 16;
+        let columns = Math.floor(canvas.width / fontSize);
+        let drops = [];
+
+        // Initialize drops
+        function initDrops() {
+          columns = Math.floor(canvas.width / fontSize);
+          drops = new Array(columns).fill(0).map(function () {
+            return Math.random() * -100;
+          });
+        }
+        initDrops();
+        window.addEventListener('resize', initDrops);
+
+        function drawMatrix() {
+          // Semi-transparent black to create fade trail effect
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.font = fontSize + 'px monospace';
+
+          for (var i = 0; i < drops.length; i++) {
+            var char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+
+            // Bright head character
+            var x = i * fontSize;
+            var y = drops[i] * fontSize;
+
+            // Head glow - bright white/green
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(char, x, y);
+
+            // Trail character slightly above with green
+            if (drops[i] > 1) {
+              var trailChar = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+              ctx.fillStyle = '#00ff00';
+              ctx.fillText(trailChar, x, y - fontSize);
+            }
+
+            // Move drop down
+            drops[i]++;
+
+            // Reset drop to top randomly after it goes off screen
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+              drops[i] = 0;
+            }
+          }
+
+          requestAnimationFrame(drawMatrix);
+        }
+
+        drawMatrix();
+      })();
+
+      // ========== Original Fake Alert Function ==========
+      function hca() {
+        var n = 100;
+        for (var i = 1; i <= n; i++) {
+          setTimeout(function () {
+            var box = document.createElement('div');
+            box.innerText = '\u26a0\ufe0fACE\u672a\u6210\u529f\u62e6\u622a\u75c5\u6bd2\u26a0\ufe0f';
+            document.body.appendChild(box);
+            box.className = 'fake-alert';
+            box.offsetHeight;
+            box.style.left = Math.random() * 100 + '%';
+            box.style.top = Math.random() * 100 + '%';
+            box.style.transform = 'scale(' + (Math.random() + 0.5) + ') rotate(' + (Math.random() * 60 - 30) + 'deg)';
+            box.style.opacity = '1';
+          }, i * 20);
+        }
+      }
+    </script>
+  </body>
+</html>
