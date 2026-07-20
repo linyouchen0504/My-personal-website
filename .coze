@@ -1,0 +1,10 @@
+[project]
+requires = ["nodejs-24"]
+
+[dev]
+build = ["pip", "install", "flask"]
+run = ["python", "assets/app.py"]
+
+[deploy]
+build = ["pip", "install", "flask"]
+run = ["python", "assets/app.py"]

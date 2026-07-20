@@ -1,5 +1,7 @@
-from flask import *
-app = Flask(__name__)
+import os
+from flask import Flask, render_template, request, redirect
+
+app = Flask(__name__, template_folder=os.path.dirname(os.path.abspath(__file__)))
 
 messages = []
 
@@ -11,9 +13,9 @@ def home():
 def post():
     name = request.form.get("name")
     msg = request.form.get("message")
-    #print("名字：", name)
-    #print("留言内容：", msg)
     messages.append({"name": name, "msg": msg})
     return redirect("/")
 
-app.run(debug=True)
+if __name__ == '__main__':
+    port = int(os.environ.get('DEPLOY_RUN_PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
