@@ -2,9 +2,22 @@ import os
 import traceback
 from flask import Flask, render_template, request, redirect, jsonify
 
-# Use absolute path for template folder to ensure it works in any working directory
+# Robust path resolution that works in both development and WSGI environments
+# When running directly: __file__ is assets/app.py, so BASE_DIR is assets/
+# When imported via WSGI: __file__ is still assets/app.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app = Flask(__name__, template_folder=BASE_DIR)
+
+# Verify template folder exists
+TEMPLATE_FOLDER = BASE_DIR
+if not os.path.isdir(TEMPLATE_FOLDER):
+    raise RuntimeError(f"Template folder not found: {TEMPLATE_FOLDER}")
+
+app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
+
+# Verify template file exists
+TEMPLATE_FILE = os.path.join(TEMPLATE_FOLDER, 'board.html')
+if not os.path.isfile(TEMPLATE_FILE):
+    raise RuntimeError(f"Template file not found: {TEMPLATE_FILE}")
 
 messages = []
 
@@ -35,6 +48,7 @@ def internal_error(error):
     traceback.print_exc()
     return f"Internal Server Error: {str(error)}", 500
 
+# Only run the development server when executed directly (not in WSGI)
 if __name__ == '__main__':
     port = int(os.environ.get('DEPLOY_RUN_PORT', 5000))
     # Disable debug mode in production
