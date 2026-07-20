@@ -576,6 +576,10 @@
       (function () {
         var toast = document.getElementById('error-toast');
         if (toast) {
+          // Clean the URL to remove ?error=1 so refresh won't re-show the toast
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
           setTimeout(function () {
             toast.classList.add('fade-out');
             setTimeout(function () {
