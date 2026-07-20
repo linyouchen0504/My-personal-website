@@ -7,12 +7,15 @@ messages = []
 
 @app.route('/')
 def home():
-    return render_template("board.html", messages=messages)
+    error = request.args.get('error', '')
+    return render_template("board.html", messages=messages, error=error)
 
 @app.route('/post', methods=["POST"])
 def post():
-    name = request.form.get("name")
-    msg = request.form.get("message")
+    name = request.form.get("name", "").strip()
+    msg = request.form.get("message", "").strip()
+    if not name or not msg:
+        return redirect("/?error=1")
     messages.append({"name": name, "msg": msg})
     return redirect("/")
 

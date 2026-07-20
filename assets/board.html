@@ -342,6 +342,59 @@
         margin-bottom: 16px;
         text-shadow: 0 0 10px rgba(0, 255, 255, 0.6), 0 0 20px rgba(0, 255, 255, 0.3);
       }
+
+      /* Error toast */
+      .cyber-toast {
+        position: fixed;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        background: rgba(10, 0, 0, 0.85);
+        border: 1px solid #ff3333;
+        border-radius: 4px;
+        padding: 12px 28px;
+        color: #ff4444;
+        font-family: 'Courier New', monospace;
+        font-size: 0.95rem;
+        font-weight: bold;
+        letter-spacing: 2px;
+        text-shadow: 0 0 8px rgba(255, 50, 50, 0.7);
+        box-shadow: 0 0 20px rgba(255, 50, 50, 0.3), inset 0 0 15px rgba(255, 50, 50, 0.05);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        animation: toastIn 0.4s ease-out;
+      }
+
+      .cyber-toast.fade-out {
+        animation: toastOut 0.6s ease-in forwards;
+      }
+
+      @keyframes toastIn {
+        0% {
+          opacity: 0;
+          transform: translateX(-50%) translateY(-20px) scale(0.9);
+          filter: blur(4px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0) scale(1);
+          filter: blur(0);
+        }
+      }
+
+      @keyframes toastOut {
+        0% {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0) scale(1);
+          filter: blur(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(-50%) translateY(-20px) scale(0.9);
+          filter: blur(4px);
+        }
+      }
     </style>
   </head>
   <body>
@@ -351,6 +404,11 @@
     <!-- Scanline Effects -->
     <div class="scanline-overlay"></div>
     <div class="scanline-bar"></div>
+
+    <!-- Error Toast -->
+    {% if error %}
+    <div class="cyber-toast" id="error-toast">// 请补全所有信息！</div>
+    {% endif %}
 
     <!-- Main Content -->
     <div class="content-wrapper">
@@ -513,6 +571,19 @@
           }, i * 20);
         }
       }
+
+      // ========== Error Toast Auto-hide ==========
+      (function () {
+        var toast = document.getElementById('error-toast');
+        if (toast) {
+          setTimeout(function () {
+            toast.classList.add('fade-out');
+            setTimeout(function () {
+              toast.remove();
+            }, 600);
+          }, 4000);
+        }
+      })();
     </script>
   </body>
 </html>
