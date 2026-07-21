@@ -405,10 +405,8 @@
     <div class="scanline-overlay"></div>
     <div class="scanline-bar"></div>
 
-    <!-- Error Toast -->
-    {% if error %}
-    <div class="cyber-toast" id="error-toast">// 请补全所有信息！</div>
-    {% endif %}
+    <!-- Error Toast (hidden by default, shown by JavaScript) -->
+    <div class="cyber-toast" id="error-toast" style="display: none;">// 请补全所有信息！</div>
 
     <!-- Main Content -->
     <div class="content-wrapper">
@@ -572,20 +570,35 @@
         }
       }
 
-      // ========== Error Toast Auto-hide ==========
+      // ========== Form Validation ==========
       (function () {
+        var form = document.querySelector('.cyber-form');
         var toast = document.getElementById('error-toast');
-        if (toast) {
-          // Clean the URL to remove ?error=1 so refresh won't re-show the toast
-          if (window.history && window.history.replaceState) {
-            window.history.replaceState(null, '', window.location.pathname);
-          }
-          setTimeout(function () {
-            toast.classList.add('fade-out');
-            setTimeout(function () {
-              toast.remove();
-            }, 600);
-          }, 4000);
+        
+        if (form && toast) {
+          form.addEventListener('submit', function (e) {
+            var nameInput = form.querySelector('input[name="name"]');
+            var msgInput = form.querySelector('input[name="message"]');
+            
+            var name = nameInput ? nameInput.value.trim() : '';
+            var msg = msgInput ? msgInput.value.trim() : '';
+            
+            if (!name || !msg) {
+              e.preventDefault(); // 阻止表单提交
+              
+              // 显示错误提示
+              toast.style.display = 'block';
+              toast.classList.remove('fade-out');
+              
+              // 4 秒后自动消失
+              setTimeout(function () {
+                toast.classList.add('fade-out');
+                setTimeout(function () {
+                  toast.style.display = 'none';
+                }, 600);
+              }, 4000);
+            }
+          });
         }
       })();
     </script>

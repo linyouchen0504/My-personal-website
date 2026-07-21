@@ -31,8 +31,7 @@ messages = []
 @app.route('/')
 def home():
     try:
-        error = request.args.get('error', '')
-        return render_template("board.html", messages=messages, error=error)
+        return render_template("board.html", messages=messages)
     except Exception as e:
         traceback.print_exc()
         return f"Error: {str(e)}\nTemplate folder: {template_folder}\n{traceback.format_exc()}", 500
@@ -43,7 +42,7 @@ def post():
         name = request.form.get("name", "").strip()
         msg = request.form.get("message", "").strip()
         if not name or not msg:
-            return redirect("/?error=1")
+            return redirect("/")
         messages.append({"name": name, "msg": msg})
         return redirect("/")
     except Exception as e:
