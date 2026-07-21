@@ -583,8 +583,14 @@
             var name = nameInput ? nameInput.value.trim() : '';
             var msg = msgInput ? msgInput.value.trim() : '';
             
-            if (!name || !msg) {
-              e.preventDefault(); // 阻止表单提交
+            // 名字为空时自动填充"匿名用户"
+            if (!name && nameInput) {
+              nameInput.value = '匿名用户';
+            }
+            
+            // 只有留言为空时才阻止提交
+            if (!msg) {
+              e.preventDefault();
               
               // 显示错误提示
               toast.style.display = 'block';

@@ -41,7 +41,10 @@ def post():
     try:
         name = request.form.get("name", "").strip()
         msg = request.form.get("message", "").strip()
-        if not name or not msg:
+        # 名字为空时使用"匿名用户"
+        if not name:
+            name = "匿名用户"
+        if not msg:
             return redirect("/")
         messages.append({"name": name, "msg": msg})
         return redirect("/")
