@@ -574,11 +574,19 @@
       (function () {
         var form = document.querySelector('.cyber-form');
         var toast = document.getElementById('error-toast');
+        var isSubmitting = false;
         
         if (form && toast) {
           form.addEventListener('submit', function (e) {
+            // 防止重复提交
+            if (isSubmitting) {
+              e.preventDefault();
+              return;
+            }
+            
             var nameInput = form.querySelector('input[name="name"]');
             var msgInput = form.querySelector('input[name="message"]');
+            var submitBtn = form.querySelector('button[type="submit"]');
             
             var name = nameInput ? nameInput.value.trim() : '';
             var msg = msgInput ? msgInput.value.trim() : '';
@@ -603,6 +611,16 @@
                   toast.style.display = 'none';
                 }, 600);
               }, 4000);
+              return;
+            }
+            
+            // 标记为正在提交，禁用按钮
+            isSubmitting = true;
+            if (submitBtn) {
+              submitBtn.disabled = true;
+              submitBtn.style.opacity = '0.5';
+              submitBtn.style.cursor = 'not-allowed';
+              submitBtn.textContent = '[ 发送中... ]';
             }
           });
         }
