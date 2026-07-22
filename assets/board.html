@@ -370,6 +370,15 @@
         animation: toastOut 0.6s ease-in forwards;
       }
 
+      /* Info toast (cyan theme for download notifications) */
+      .cyber-toast-info {
+        background: rgba(0, 10, 10, 0.85);
+        border: 1px solid #00ffff;
+        color: #00ffff;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.7);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 15px rgba(0, 255, 255, 0.05);
+      }
+
       @keyframes toastIn {
         0% {
           opacity: 0;
@@ -407,6 +416,9 @@
 
     <!-- Error Toast (hidden by default, shown by JavaScript) -->
     <div class="cyber-toast" id="error-toast" style="display: none;">// 请补全所有信息！</div>
+    
+    <!-- Download Info Toast -->
+    <div class="cyber-toast cyber-toast-info" id="download-toast" style="display: none;"></div>
 
     <!-- Main Content -->
     <div class="content-wrapper">
@@ -416,14 +428,11 @@
       <a href="https://www.anticheatexpert.com/">
         <h3>💖点击传送：进入ACE官网💖</h3>
       </a>
-      <a href="https://down.anticheatexpert.com/docs/ACE-files/wsa/ACE_Keeper.zip">
-        <h4>💖点击传送：下载ACE Windows版💖</h4>
-      </a>
-      <a href="https://down.anticheatexpert.com/docs/ACE-files/wsa/ACEKeeper_1.0.0.10.dmg">
-        <h5>💖点击传送：下载ACE Mac M1版💖</h5>
+      <a href="#" onclick="downloadACE(event)">
+        <h4>💖点击传送：下载ACE💖</h4>
       </a>
       <a href="https://gamesafe.qq.com/safety-online.shtml">
-        <h6>💖点击传送：进入ACE在线查询💖</h6>
+        <h5>💖点击传送：进入ACE在线查询💖</h5>
       </a>
       
       <div class="msg-title">// MESSAGE_BOARD</div>
@@ -632,6 +641,55 @@
           });
         }
       })();
+
+      // ========== Download ACE Function ==========
+      function downloadACE(e) {
+        e.preventDefault();
+        
+        var ua = navigator.userAgent.toLowerCase();
+        var isWindows = ua.indexOf('win') !== -1;
+        var isMac = ua.indexOf('mac') !== -1;
+        
+        var toast = document.getElementById('download-toast');
+        if (!toast) return;
+        
+        // 清除之前的定时器
+        if (window.downloadToastTimer) clearTimeout(window.downloadToastTimer);
+        if (window.downloadFadeTimer) clearTimeout(window.downloadFadeTimer);
+        
+        if (isWindows) {
+          // Windows 用户直接下载
+          window.location.href = 'https://down.anticheatexpert.com/docs/ACE-files/wsa/ACE_Keeper.zip';
+        } else if (isMac) {
+          // Mac 用户显示提示并下载
+          toast.textContent = '// 请确保你的 Mac 在 M1 芯片及以上';
+          toast.style.display = 'block';
+          toast.classList.remove('fade-out');
+          toast.style.opacity = '1';
+          
+          window.downloadToastTimer = setTimeout(function () {
+            toast.classList.add('fade-out');
+            window.downloadFadeTimer = setTimeout(function () {
+              toast.style.display = 'none';
+            }, 600);
+          }, 4000);
+          
+          window.location.href = 'https://down.anticheatexpert.com/docs/ACE-files/wsa/ACEKeeper_1.0.0.10.dmg';
+        } else {
+          // 其他系统显示错误提示
+          toast.textContent = '// 您的浏览器检测不到 UA 或 UA 不是 Windows 或 Mac';
+          toast.style.display = 'block';
+          toast.classList.remove('fade-out');
+          toast.style.opacity = '1';
+          
+          window.downloadToastTimer = setTimeout(function () {
+            toast.classList.add('fade-out');
+            window.downloadFadeTimer = setTimeout(function () {
+              toast.style.display = 'none';
+            }, 600);
+          }, 4000);
+        }
+      }
     </script>
   </body>
 </html>
