@@ -648,7 +648,9 @@
         
         var ua = navigator.userAgent.toLowerCase();
         var isWindows = ua.indexOf('win') !== -1;
-        var isMac = ua.indexOf('mac') !== -1;
+        // 先检测 iOS 设备（iPhone、iPad、iPod），因为 iPadOS 13+ 的 Safari 使用桌面模式，UA 中包含 "mac"
+        var isIOS = ua.indexOf('iphone') !== -1 || ua.indexOf('ipad') !== -1 || ua.indexOf('ipod') !== -1;
+        var isMac = !isIOS && ua.indexOf('mac') !== -1;
         
         var toast = document.getElementById('download-toast');
         if (!toast) return;
