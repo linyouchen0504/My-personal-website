@@ -575,6 +575,8 @@
         var form = document.querySelector('.cyber-form');
         var toast = document.getElementById('error-toast');
         var isSubmitting = false;
+        var toastTimer = null;
+        var fadeTimer = null;
         
         if (form && toast) {
           form.addEventListener('submit', function (e) {
@@ -600,14 +602,19 @@
             if (!msg) {
               e.preventDefault();
               
-              // 显示错误提示
-              toast.style.display = 'block';
+              // 清除之前的定时器
+              if (toastTimer) clearTimeout(toastTimer);
+              if (fadeTimer) clearTimeout(fadeTimer);
+              
+              // 重置动画状态
               toast.classList.remove('fade-out');
+              toast.style.display = 'block';
+              toast.style.opacity = '1';
               
               // 4 秒后自动消失
-              setTimeout(function () {
+              toastTimer = setTimeout(function () {
                 toast.classList.add('fade-out');
-                setTimeout(function () {
+                fadeTimer = setTimeout(function () {
                   toast.style.display = 'none';
                 }, 600);
               }, 4000);
