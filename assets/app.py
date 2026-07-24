@@ -1,6 +1,6 @@
 import os
 import traceback
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, send_file
 
 # Robust path resolution that works in both development and WSGI environments
 # When running directly: __file__ is assets/app.py, so BASE_DIR is assets/
@@ -24,7 +24,8 @@ messages = []
 @app.route('/')
 def home():
     try:
-        return render_template("board.html", messages=messages)
+        play_music = request.args.get('play', '') == '1'
+        return render_template("board.html", messages=messages, play_music=play_music)
     except Exception as e:
         traceback.print_exc()
         return f"Error: {str(e)}\n{traceback.format_exc()}", 500
@@ -40,6 +41,8 @@ def post():
         if not msg:
             return redirect("/")
         messages.append({"name": name, "msg": msg})
+        if "2077" in msg:
+            return redirect("/?play=1")
         return redirect("/")
     except Exception as e:
         traceback.print_exc()
@@ -49,6 +52,13 @@ def post():
 def internal_error(error):
     traceback.print_exc()
     return f"Internal Server Error: {str(error)}", 500
+
+@app.route('/audio')
+def serve_audio():
+    audio_path = os.path.join(BASE_DIR, "Samuel Kim、Lorien - I Really Want to Stay at Your House.mp3")
+    if os.path.isfile(audio_path):
+        return send_file(audio_path, mimetype='audio/mpeg')
+    return "Audio not found", 404
 
 # Only run the development server when executed directly (not in WSGI)
 if __name__ == '__main__':

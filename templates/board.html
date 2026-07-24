@@ -563,6 +563,9 @@
       </div>
     </div>
 
+    <!-- Hidden Audio Player for 2077 Easter Egg -->
+    <audio id="cyberpunk-music" preload="auto" style="display: none;"></audio>
+
     <!-- Main Content -->
     <div class="content-wrapper">
       <h1>ACE</h1>
@@ -587,6 +590,19 @@
         </div>
         {%endfor%}
       </div>
+      
+      {% if play_music %}
+      <script>
+        (function() {
+          var audio = document.getElementById('cyberpunk-music');
+          if (audio) {
+            audio.src = '/audio';
+            audio.volume = 0.6;
+            audio.play().catch(function(e) {});
+          }
+        })();
+      </script>
+      {% endif %}
 
       <form action="/post" method="POST" class="cyber-form">
         <input name="name" placeholder="&gt; 输入你的名字..." />
