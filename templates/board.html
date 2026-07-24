@@ -435,9 +435,18 @@
         animation: modalSlideIn 0.3s ease;
       }
       
+      .cyber-modal.closing {
+        animation: modalSlideOut 0.25s ease forwards;
+      }
+      
       @keyframes modalSlideIn {
         from { transform: translateY(-30px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
+      }
+      
+      @keyframes modalSlideOut {
+        from { transform: translateY(0); opacity: 1; }
+        to { transform: translateY(-20px); opacity: 0; }
       }
       
       .cyber-modal::before {
@@ -783,12 +792,22 @@
         document.getElementById('terms-modal').style.display = 'flex';
       }
       
+      function closeModal() {
+        var modalOverlay = document.getElementById('terms-modal');
+        var modalContent = modalOverlay.querySelector('.cyber-modal');
+        modalContent.classList.add('closing');
+        setTimeout(function() {
+          modalOverlay.style.display = 'none';
+          modalContent.classList.remove('closing');
+        }, 250);
+      }
+      
       function rejectACE() {
-        document.getElementById('terms-modal').style.display = 'none';
+        closeModal();
       }
       
       function agreeACE() {
-        document.getElementById('terms-modal').style.display = 'none';
+        closeModal();
         
         var ua = navigator.userAgent.toLowerCase();
         var isWindows = ua.indexOf('win') !== -1;
