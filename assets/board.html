@@ -406,8 +406,54 @@
       }
     </style>
     <style>
-      /* Cyberpunk Modal */
-      .cyber-modal-overlay {
+      /* Easter Egg Toast */
+      .egg-toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: rgba(10, 10, 20, 0.85);
+        border: 2px solid #ff00ff;
+        color: #ff00ff;
+        padding: 14px 32px;
+        font-family: 'Courier New', monospace;
+        font-size: 18px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff88;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 4px;
+        z-index: 9999;
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .egg-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      .egg-toast::before {
+        content: '>> ';
+        color: #ff00ff;
+      }
+      .egg-toast::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #ff00ff, transparent);
+        animation: scanLine 2s linear infinite;
+      }
+      @keyframes scanLine {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+    </style>
+  </head>
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
         background: rgba(0, 0, 0, 0.75);
@@ -566,6 +612,9 @@
     <!-- Hidden Audio Player for 2077 Easter Egg -->
     <audio id="cyberpunk-music" preload="auto" style="display: none;"></audio>
 
+    <!-- Easter Egg Toast -->
+    <div class="egg-toast" id="egg-toast">你已触发彩蛋！</div>
+
     <!-- Main Content -->
     <div class="content-wrapper">
       <h1>ACE</h1>
@@ -599,6 +648,13 @@
             audio.src = '/audio';
             audio.volume = 0.6;
             audio.play().catch(function(e) {});
+          }
+          var toast = document.getElementById('egg-toast');
+          if (toast) {
+            toast.classList.add('show');
+            setTimeout(function() {
+              toast.classList.remove('show');
+            }, 4000);
           }
         })();
       </script>
