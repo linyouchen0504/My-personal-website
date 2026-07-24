@@ -501,7 +501,7 @@
         display: none;
         align-items: center;
         justify-content: center;
-        z-index: 1000;
+        z-index: 9999;
       }
       .cyber-modal {
         background: rgba(8, 8, 20, 0.92);
@@ -892,8 +892,17 @@
 
       // ========== Download ACE Function ==========
       function downloadACE(e) {
-        // 显示条款弹窗
-        document.getElementById('terms-modal').style.display = 'flex';
+        e.preventDefault();
+        e.stopPropagation();
+        var modal = document.getElementById('terms-modal');
+        if (!modal) {
+          alert('弹窗元素不存在');
+          return false;
+        }
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
+        return false;
       }
       
       function closeModal() {
