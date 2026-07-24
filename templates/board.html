@@ -405,6 +405,123 @@
         }
       }
     </style>
+    <style>
+      /* Cyberpunk Modal */
+      .cyber-modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: modalFadeIn 0.3s ease;
+      }
+      
+      @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      .cyber-modal {
+        background: rgba(8, 8, 20, 0.92);
+        border: 1.5px solid #00ffff;
+        box-shadow: 0 0 20px #00ffff44, inset 0 0 20px #00ffff11;
+        padding: 32px 36px;
+        max-width: 480px;
+        width: 90%;
+        position: relative;
+        animation: modalSlideIn 0.3s ease;
+      }
+      
+      @keyframes modalSlideIn {
+        from { transform: translateY(-30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      
+      .cyber-modal::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00ffff, transparent);
+        animation: scanline 2s linear infinite;
+      }
+      
+      .cyber-modal-title {
+        color: #00ffff;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        text-shadow: 0 0 12px #00ffff88;
+        letter-spacing: 1px;
+      }
+      
+      .cyber-modal-body {
+        color: #a0b0c0;
+        font-size: 14px;
+        line-height: 1.8;
+        margin-bottom: 28px;
+      }
+      
+      .cyber-link {
+        color: #00ffff;
+        text-decoration: underline;
+        text-decoration-color: #00ffff66;
+        text-underline-offset: 3px;
+        transition: text-shadow 0.2s;
+      }
+      
+      .cyber-link:hover {
+        text-shadow: 0 0 12px #00ffff;
+      }
+      
+      .cyber-modal-buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: flex-end;
+      }
+      
+      .cyber-modal-btn {
+        padding: 10px 28px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        letter-spacing: 1px;
+      }
+      
+      .cyber-modal-btn-yes {
+        background: transparent;
+        border: 1.5px solid #00ffff;
+        color: #00ffff;
+        text-shadow: 0 0 6px #00ffff66;
+        box-shadow: 0 0 8px #00ffff33;
+      }
+      
+      .cyber-modal-btn-yes:hover {
+        background: #00ffff;
+        color: #0a0a14;
+        box-shadow: 0 0 24px #00ffffaa, 0 0 48px #00ffff44;
+        transform: translateY(-2px);
+      }
+      
+      .cyber-modal-btn-no {
+        background: transparent;
+        border: 1.5px solid #ff4466;
+        color: #ff4466;
+        text-shadow: 0 0 6px #ff446666;
+        box-shadow: 0 0 8px #ff446633;
+      }
+      
+      .cyber-modal-btn-no:hover {
+        background: #ff4466;
+        color: #0a0a14;
+        box-shadow: 0 0 24px #ff4466aa, 0 0 48px #ff446644;
+        transform: translateY(-2px);
+      }
+    </style>
   </head>
   <body>
     <!-- Matrix Digital Rain Canvas -->
@@ -419,6 +536,23 @@
     
     <!-- Download Info Toast -->
     <div class="cyber-toast cyber-toast-info" id="download-toast" style="display: none;"></div>
+
+    <!-- Terms Modal -->
+    <div class="cyber-modal-overlay" id="terms-modal" style="display: none;">
+      <div class="cyber-modal">
+        <div class="cyber-modal-title">// 请阅读并同意以下条款</div>
+        <div class="cyber-modal-body">
+          请确保您已阅读并同意
+          <a href="https://down.anticheatexpert.com/docs/ACE-files/wsa/service_protocol.pdf" target="_blank" class="cyber-link">《服务条款》</a>
+          与
+          <a href="https://down.anticheatexpert.com/docs/ACE-files/acekeeper/privacy_policy.pdf" target="_blank" class="cyber-link">《隐私条款》</a>。
+        </div>
+        <div class="cyber-modal-buttons">
+          <button class="cyber-modal-btn cyber-modal-btn-no" onclick="rejectACE()">不同意</button>
+          <button class="cyber-modal-btn cyber-modal-btn-yes" onclick="agreeACE()">同意</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Main Content -->
     <div class="content-wrapper">
@@ -645,6 +779,16 @@
       // ========== Download ACE Function ==========
       function downloadACE(e) {
         e.preventDefault();
+        // 显示条款弹窗
+        document.getElementById('terms-modal').style.display = 'flex';
+      }
+      
+      function rejectACE() {
+        document.getElementById('terms-modal').style.display = 'none';
+      }
+      
+      function agreeACE() {
+        document.getElementById('terms-modal').style.display = 'none';
         
         var ua = navigator.userAgent.toLowerCase();
         var isWindows = ua.indexOf('win') !== -1;
