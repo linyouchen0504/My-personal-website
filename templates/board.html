@@ -407,69 +407,7 @@
     </style>
     <style>
       /* Easter Egg Toast */
-      .egg-toast {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%) translateY(-100px);
-        background: rgba(10, 10, 20, 0.85);
-        border: 2px solid #ff00ff;
-        color: #ff00ff;
-        padding: 14px 32px;
-        font-family: 'Courier New', monospace;
-        font-size: 18px;
-        font-weight: bold;
-        letter-spacing: 2px;
-        text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff88;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-radius: 4px;
-        z-index: 1000;
-        opacity: 0;
-        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        pointer-events: none;
-        white-space: nowrap;
-      }
-      .egg-toast.show {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-      }
-      .egg-toast::before {
-        content: '>> ';
-        color: #ff00ff;
-      }
-      .egg-toast::after {
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #ff00ff, transparent);
-        animation: scanLine 2s linear infinite;
-      }
-      @keyframes scanLine {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-      }
-    </style>
-  </head>
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(6px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        animation: modalFadeIn 0.3s ease;
-      }
-      
-      @keyframes modalFadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      
+      /* === Modal Styles === */
       .cyber-modal-overlay {
         position: fixed;
         top: 0;
@@ -484,6 +422,13 @@
         justify-content: center;
         z-index: 9999;
       }
+      .cyber-modal-overlay.closing {
+        animation: modalFadeOut 0.25s ease forwards;
+      }
+      @keyframes modalFadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
       .cyber-modal {
         background: rgba(8, 8, 20, 0.92);
         border: 1.5px solid #00ffff;
@@ -494,21 +439,17 @@
         position: relative;
         animation: modalSlideIn 0.3s ease;
       }
-      
       .cyber-modal.closing {
         animation: modalSlideOut 0.25s ease forwards;
       }
-      
       @keyframes modalSlideIn {
         from { transform: translateY(-30px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
-      
       @keyframes modalSlideOut {
         from { transform: translateY(0); opacity: 1; }
         to { transform: translateY(-20px); opacity: 0; }
       }
-      
       .cyber-modal::before {
         content: '';
         position: absolute;
@@ -517,7 +458,10 @@
         background: linear-gradient(90deg, transparent, #00ffff, transparent);
         animation: scanline 2s linear infinite;
       }
-      
+      @keyframes scanline {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
       .cyber-modal-title {
         color: #00ffff;
         font-size: 18px;
@@ -526,14 +470,12 @@
         text-shadow: 0 0 12px #00ffff88;
         letter-spacing: 1px;
       }
-      
       .cyber-modal-body {
         color: #a0b0c0;
         font-size: 14px;
         line-height: 1.8;
         margin-bottom: 28px;
       }
-      
       .cyber-link {
         color: #00ffff;
         text-decoration: underline;
@@ -541,17 +483,14 @@
         text-underline-offset: 3px;
         transition: text-shadow 0.2s;
       }
-      
       .cyber-link:hover {
         text-shadow: 0 0 12px #00ffff;
       }
-      
       .cyber-modal-buttons {
         display: flex;
         gap: 16px;
         justify-content: flex-end;
       }
-      
       .cyber-modal-btn {
         padding: 10px 28px;
         font-size: 14px;
@@ -560,7 +499,6 @@
         transition: all 0.25s ease;
         letter-spacing: 1px;
       }
-      
       .cyber-modal-btn-yes {
         background: transparent;
         border: 1.5px solid #00ffff;
@@ -568,14 +506,12 @@
         text-shadow: 0 0 6px #00ffff66;
         box-shadow: 0 0 8px #00ffff33;
       }
-      
       .cyber-modal-btn-yes:hover {
         background: #00ffff;
         color: #0a0a14;
         box-shadow: 0 0 24px #00ffffaa, 0 0 48px #00ffff44;
         transform: translateY(-2px);
       }
-      
       .cyber-modal-btn-no {
         background: transparent;
         border: 1.5px solid #ff4466;
@@ -583,11 +519,40 @@
         text-shadow: 0 0 6px #ff446666;
         box-shadow: 0 0 8px #ff446633;
       }
-      
       .cyber-modal-btn-no:hover {
         background: #ff4466;
         color: #0a0a14;
         box-shadow: 0 0 24px #ff4466aa, 0 0 48px #ff446644;
+        transform: translateY(-2px);
+      }
+      
+      /* === Egg Modal Styles === */
+      .cyber-modal-egg .cyber-modal-title {
+        color: #ff00ff;
+        text-shadow: 0 0 12px #ff00ff88, 0 0 24px #ff00ff44;
+      }
+      .cyber-modal-egg .cyber-modal-body {
+        text-align: center;
+        padding: 16px 0;
+      }
+      .cyber-modal-egg .cyber-modal-btn-close {
+        background: transparent;
+        border: 1.5px solid #ff00ff;
+        color: #ff00ff;
+        text-shadow: 0 0 6px #ff00ff66;
+        box-shadow: 0 0 8px #ff00ff33;
+        padding: 10px 32px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        letter-spacing: 1px;
+        font-family: 'Courier New', monospace;
+      }
+      .cyber-modal-egg .cyber-modal-btn-close:hover {
+        background: #ff00ff;
+        color: #0a0a14;
+        box-shadow: 0 0 24px #ff00ffaa, 0 0 48px #ff00ff44;
         transform: translateY(-2px);
       }
     </style>
@@ -626,8 +591,20 @@
     <!-- Hidden Audio Player for 2077 Easter Egg -->
     <audio id="cyberpunk-music" preload="auto" style="display: none;"></audio>
 
-    <!-- Easter Egg Toast -->
-    <div class="egg-toast" id="egg-toast">你已触发彩蛋！</div>
+    <!-- Easter Egg Modal -->
+    <div class="cyber-modal-overlay" id="egg-modal" style="display: none;">
+      <div class="cyber-modal cyber-modal-egg">
+        <div class="cyber-modal-title">// 你触发了一个彩蛋！</div>
+        <div class="cyber-modal-body">
+          <audio id="cyberpunk-music" controls autoplay style="width: 100%; margin: 8px 0;">
+            <source src="/audio" type="audio/mpeg">
+          </audio>
+        </div>
+        <div class="cyber-modal-buttons" style="justify-content: center;">
+          <button class="cyber-modal-btn-close" onclick="closeEggModal()">关闭</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Main Content -->
     <div class="content-wrapper">
@@ -657,18 +634,15 @@
       {% if play_music %}
       <script>
         (function() {
+          var modal = document.getElementById('egg-modal');
+          if (modal) {
+            modal.style.display = 'flex';
+          }
           var audio = document.getElementById('cyberpunk-music');
           if (audio) {
             audio.src = '/audio';
             audio.volume = 0.6;
             audio.play().catch(function(e) {});
-          }
-          var toast = document.getElementById('egg-toast');
-          if (toast) {
-            toast.classList.add('show');
-            setTimeout(function() {
-              toast.classList.remove('show');
-            }, 4000);
           }
         })();
       </script>
@@ -888,6 +862,21 @@
       
       function closeModal() {
         var modalOverlay = document.getElementById('terms-modal');
+        var modalContent = modalOverlay.querySelector('.cyber-modal');
+        modalContent.classList.add('closing');
+        setTimeout(function() {
+          modalOverlay.style.display = 'none';
+          modalContent.classList.remove('closing');
+        }, 250);
+      }
+      
+      function closeEggModal() {
+        var modalOverlay = document.getElementById('egg-modal');
+        var audio = document.getElementById('cyberpunk-music');
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
         var modalContent = modalOverlay.querySelector('.cyber-modal');
         modalContent.classList.add('closing');
         setTimeout(function() {
