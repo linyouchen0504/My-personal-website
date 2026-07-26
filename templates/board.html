@@ -588,15 +588,12 @@
       </div>
     </div>
 
-    <!-- Hidden Audio Player for 2077 Easter Egg -->
-    <audio id="cyberpunk-music" preload="auto" style="display: none;"></audio>
-
     <!-- Easter Egg Modal -->
     <div class="cyber-modal-overlay" id="egg-modal" style="display: none;">
       <div class="cyber-modal cyber-modal-egg">
         <div class="cyber-modal-title">// 你触发了一个彩蛋！</div>
         <div class="cyber-modal-body">
-          <audio id="cyberpunk-music" controls autoplay style="width: 100%; margin: 8px 0;">
+          <audio id="cyberpunk-music" controls style="width: 100%; margin: 8px 0;">
             <source src="/audio" type="audio/mpeg">
           </audio>
         </div>
@@ -637,11 +634,6 @@
           var modal = document.getElementById('egg-modal');
           if (modal) {
             modal.style.display = 'flex';
-          }
-          var audio = document.getElementById('cyberpunk-music');
-          if (audio) {
-            audio.src = '/audio';
-            audio.volume = 0.6;
           }
         })();
       </script>
