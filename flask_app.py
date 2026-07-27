@@ -1,6 +1,7 @@
 import os
 import traceback
-from flask import Flask, render_template, request, redirect, send_file
+import hashlib
+from flask import Flask, render_template, request, redirect, send_file, session
 
 # PythonAnywhere 部署：模板文件应该放在 templates 目录中
 # 获取当前文件所在目录
@@ -25,6 +26,11 @@ if template_folder is None:
     template_folder = BASE_DIR
 
 app = Flask(__name__, template_folder=template_folder)
+app.secret_key = os.urandom(24)
+
+# Admin credentials (password hashed with SHA-256)
+ADMIN_USERNAME = "linyouchen0504"
+ADMIN_PASSWORD_HASH = hashlib.sha256("l28034414".encode()).hexdigest()
 
 messages = []
 
@@ -76,6 +82,38 @@ def serve_video():
     if os.path.isfile(video_path):
         return send_file(video_path, mimetype='video/mp4')
     return "Video not found", 404
+
+# Admin routes
+@app.route('/admin')
+def admin():
+    if not session.get('admin_logged_in'):
+        return render_template("board.html", messages=[], admin_login=True, admin_error=None)
+    return render_template("board.html", messages=messages, admin_panel=True)
+
+@app.route('/admin/login', methods=["POST"])
+def admin_login():
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "").strip()
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    
+    if username == ADMIN_USERNAME and password_hash == ADMIN_PASSWORD_HASH:
+        session['admin_logged_in'] = True
+        return redirect("/admin")
+    else:
+        return render_template("board.html", messages=[], admin_login=True, admin_error="用户名或密码错误")
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin_logged_in', None)
+    return redirect("/admin")
+
+@app.route('/admin/delete/<int:index>')
+def admin_delete(index):
+    if not session.get('admin_logged_in'):
+        return redirect("/admin")
+    if 0 <= index < len(messages):
+        messages.pop(index)
+    return redirect("/admin")
 
 # 仅开发环境运行
 if __name__ == '__main__':

@@ -404,6 +404,188 @@
           filter: blur(4px);
         }
       }
+
+      /* Admin Button */
+      .admin-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(0, 255, 255, 0.1);
+        border: 2px solid #00ffff;
+        color: #00ffff;
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        z-index: 100;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+      }
+
+      .admin-btn:hover {
+        background: rgba(0, 255, 255, 0.2);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.6), 0 0 40px rgba(0, 255, 255, 0.3);
+        transform: scale(1.1);
+      }
+
+      /* Admin Login & Panel */
+      .admin-container {
+        max-width: 600px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .admin-login-form {
+        background: rgba(10, 10, 20, 0.8);
+        border: 1px solid #00ffff;
+        border-radius: 10px;
+        padding: 40px;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+      }
+
+      .admin-login-form h2 {
+        color: #00ffff;
+        margin-bottom: 30px;
+        text-shadow: 0 0 10px #00ffff;
+      }
+
+      .admin-login-form input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 20px;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        color: #00ffff;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+      }
+
+      .admin-login-form input:focus {
+        outline: none;
+        border-color: #00ffff;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+      }
+
+      .admin-login-form button {
+        width: 100%;
+        padding: 12px;
+        background: rgba(0, 255, 255, 0.2);
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        color: #00ffff;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .admin-login-form button:hover {
+        background: rgba(0, 255, 255, 0.3);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+      }
+
+      .admin-error {
+        color: #ff0040;
+        margin-bottom: 20px;
+        text-shadow: 0 0 10px #ff0040;
+      }
+
+      .admin-panel {
+        width: 100%;
+        max-width: 800px;
+      }
+
+      .admin-panel h2 {
+        color: #00ffff;
+        margin-bottom: 30px;
+        text-shadow: 0 0 10px #00ffff;
+      }
+
+      .admin-msg-list {
+        width: 100%;
+      }
+
+      .admin-msg-item {
+        background: rgba(10, 10, 20, 0.7);
+        border: 1px solid #00ffff;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: fadeIn 0.5s ease;
+      }
+
+      .admin-msg-content {
+        flex: 1;
+      }
+
+      .admin-msg-name {
+        color: #00ffff;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .admin-msg-text {
+        color: #e0e0e0;
+      }
+
+      .admin-delete-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 0, 64, 0.2);
+        border: 1px solid #ff0040;
+        color: #ff0040;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        margin-left: 15px;
+      }
+
+      .admin-delete-btn:hover {
+        background: rgba(255, 0, 64, 0.4);
+        box-shadow: 0 0 15px rgba(255, 0, 64, 0.5);
+        transform: scale(1.1);
+      }
+
+      .admin-logout-btn {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 20px;
+        background: rgba(255, 0, 64, 0.2);
+        border: 1px solid #ff0040;
+        border-radius: 5px;
+        color: #ff0040;
+        text-decoration: none;
+        transition: all 0.3s ease;
+      }
+
+      .admin-logout-btn:hover {
+        background: rgba(255, 0, 64, 0.4);
+        box-shadow: 0 0 15px rgba(255, 0, 64, 0.5);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
     </style>
     <style>
       /* Easter Egg Toast */
@@ -620,6 +802,48 @@
 
     <!-- Main Content -->
     <div class="content-wrapper">
+      {% if admin_login %}
+      <!-- Admin Login Page -->
+      <div class="admin-container">
+        <div class="admin-login-form">
+          <h2>// 管理员登录</h2>
+          {% if admin_error %}
+          <div class="admin-error">{{ admin_error }}</div>
+          {% endif %}
+          <form action="/admin/login" method="POST">
+            <input type="text" name="username" placeholder="&gt; 用户名" required />
+            <input type="password" name="password" placeholder="&gt; 密码" required />
+            <button type="submit">[ 登录 ]</button>
+          </form>
+        </div>
+      </div>
+      {% elif admin_panel %}
+      <!-- Admin Panel -->
+      <div class="admin-panel">
+        <h2>// 留言板管理</h2>
+        <div class="admin-msg-list">
+          {% if messages %}
+            {% for m in messages %}
+            <div class="admin-msg-item">
+              <div class="admin-msg-content">
+                <div class="admin-msg-name">&gt; {{ m.name }}</div>
+                <div class="admin-msg-text">{{ m.msg }}</div>
+              </div>
+              <a href="/admin/delete/{{ loop.index0 }}" class="admin-delete-btn" title="删除">✕</a>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="admin-msg-item">
+              <div class="admin-msg-content">
+                <div class="admin-msg-text">暂无留言</div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+        <a href="/admin/logout" class="admin-logout-btn">[ 退出登录 ]</a>
+      </div>
+      {% else %}
+      <!-- Main Page Content -->
       <h1>ACE</h1>
       <h2><span id="typewriter-text"></span><span class="cursor"></span></h2>
       <img src="https://down.anticheatexpert.com/static/iegssibox/ace-domestic-web/idc_3059_oper/2607171410/img/ace-logo.33bf637.svg" onclick="hca()" />
@@ -670,6 +894,12 @@
         <input name="message" placeholder="&gt; 说点什么..." />
         <button type="submit">[ 发送留言 ]</button>
       </form>
+      {% endif %}
+
+      <!-- Admin Button -->
+      <a href="/admin" class="admin-btn" title="管理员">
+        <span>⚙</span>
+      </a>
     </div>
 
     <script>
