@@ -10,21 +10,6 @@
         padding: 0;
         box-sizing: border-box;
       }
-      
-      function closeVideoModal() {
-        var modalOverlay = document.getElementById('video-egg-modal');
-        var video = document.getElementById('genshin-video');
-        if (video) {
-          video.pause();
-          video.currentTime = 0;
-        }
-        var modalContent = modalOverlay.querySelector('.cyber-modal');
-        modalContent.classList.add('closing');
-        setTimeout(function() {
-          modalOverlay.style.display = 'none';
-          modalContent.classList.remove('closing');
-        }, 250);
-      }
 
       body {
         background-color: #000000;
@@ -908,6 +893,21 @@
         if (audio) {
           audio.pause();
           audio.currentTime = 0;
+        }
+        var modalContent = modalOverlay.querySelector('.cyber-modal');
+        modalContent.classList.add('closing');
+        setTimeout(function() {
+          modalOverlay.style.display = 'none';
+          modalContent.classList.remove('closing');
+        }, 250);
+      }
+
+      function closeVideoModal() {
+        var modalOverlay = document.getElementById('video-egg-modal');
+        var video = document.getElementById('genshin-video');
+        if (video) {
+          video.pause();
+          video.currentTime = 0;
         }
         var modalContent = modalOverlay.querySelector('.cyber-modal');
         modalContent.classList.add('closing');
