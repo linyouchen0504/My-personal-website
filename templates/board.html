@@ -576,6 +576,30 @@
         box-shadow: 0 0 15px rgba(255, 0, 64, 0.5);
       }
 
+      .admin-back-btn {
+        display: inline-block;
+        margin-top: 20px;
+        margin-right: 10px;
+        padding: 10px 20px;
+        background: rgba(0, 255, 255, 0.2);
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        color: #00ffff;
+        text-decoration: none;
+        transition: all 0.3s ease;
+      }
+
+      .admin-back-btn:hover {
+        background: rgba(0, 255, 255, 0.4);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+      }
+
+      .admin-panel-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+      }
+
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -815,6 +839,7 @@
             <input type="password" name="password" placeholder="&gt; 密码" required />
             <button type="submit">[ 登录 ]</button>
           </form>
+          <a href="/" class="admin-back-btn">[ 返回主页 ]</a>
         </div>
       </div>
       {% elif admin_panel %}
@@ -840,7 +865,10 @@
             </div>
           {% endif %}
         </div>
-        <a href="/admin/logout" class="admin-logout-btn">[ 退出登录 ]</a>
+        <div class="admin-panel-actions">
+          <a href="/" class="admin-back-btn">[ 返回主页 ]</a>
+          <a href="/admin/logout" class="admin-logout-btn">[ 退出登录 ]</a>
+        </div>
       </div>
       {% else %}
       <!-- Main Page Content -->
