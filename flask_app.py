@@ -1,7 +1,16 @@
 import os
+import json
+import time
+import smtplib
+import ssl
 import traceback
 import hashlib
+import requests
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, send_file, session
+from email.mime.text import MIMEText
+from email.header import Header
+from email.utils import formataddr, formatdate, make_msgid
 
 # PythonAnywhere 部署：模板文件应该放在 templates 目录中
 # 获取当前文件所在目录
@@ -33,6 +42,64 @@ ADMIN_USERNAME = "linyouchen0504"
 ADMIN_PASSWORD_HASH = hashlib.sha256("l28034414".encode()).hexdigest()
 
 messages = []
+
+def get_email_config():
+    """获取邮件配置信息"""
+    try:
+        from coze_workload_identity import Client
+        client = Client()
+        email_credential = client.get_integration_credential("integration-email-imap-smtp")
+        return json.loads(email_credential)
+    except Exception as e:
+        print(f"获取邮件配置失败: {e}")
+        return None
+
+def get_ip_location(ip_address):
+    """获取 IP 地址的地理位置信息"""
+    try:
+        response = requests.get(f"http://ip-api.com/json/{ip_address}?lang=zh-CN", timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('status') == 'success':
+                location = f"{data.get('country', '未知')} {data.get('regionName', '')} {data.get('city', '')}"
+                return location.strip()
+    except Exception as e:
+        print(f"获取 IP 定位失败: {e}")
+    return "未知位置"
+
+def send_admin_login_notification(ip_address, login_time):
+    """发送管理员登录通知邮件"""
+    try:
+        config = get_email_config()
+        if not config:
+            print("邮件配置不可用")
+            return
+        
+        location = get_ip_location(ip_address)
+        
+        subject = "新设备登录管理员账号通知"
+        content = f"时间：{login_time}\nIP：{ip_address}\n位置：{location}"
+        
+        msg = MIMEText(content, "plain", "utf-8")
+        msg["From"] = formataddr(("管理员系统", config["account"]))
+        msg["To"] = "3108908894@qq.com"
+        msg["Subject"] = Header(subject, "utf-8")
+        msg["Date"] = formatdate(localtime=True)
+        msg["Message-ID"] = make_msgid()
+        
+        ctx = ssl.create_default_context()
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+        
+        with smtplib.SMTP_SSL(config["smtp_server"], config["smtp_port"], context=ctx, timeout=30) as server:
+            server.ehlo()
+            server.login(config["account"], config["auth_code"])
+            server.sendmail(config["account"], ["3108908894@qq.com"], msg.as_string())
+            server.quit()
+        
+        print(f"管理员登录通知邮件已发送")
+    except Exception as e:
+        print(f"发送邮件失败: {e}")
+        traceback.print_exc()
 
 @app.route('/')
 def home():
@@ -98,6 +165,19 @@ def admin_login():
     
     if username == ADMIN_USERNAME and password_hash == ADMIN_PASSWORD_HASH:
         session['admin_logged_in'] = True
+        
+        # 获取客户端 IP 和登录时间
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+        if ',' in ip_address:
+            ip_address = ip_address.split(',')[0].strip()
+        login_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # 异步发送邮件通知（避免阻塞）
+        try:
+            send_admin_login_notification(ip_address, login_time)
+        except Exception as e:
+            print(f"发送登录通知邮件失败: {e}")
+        
         return redirect("/admin")
     else:
         return render_template("board.html", messages=[], admin_login=True, admin_error="用户名或密码错误")
