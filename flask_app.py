@@ -114,6 +114,10 @@ def home():
 @app.route('/post', methods=["POST"])
 def post():
     try:
+        # 检查用户是否已登录
+        if 'user_email' not in session:
+            return redirect('/')
+        
         name = request.form.get("name", "").strip()
         msg = request.form.get("message", "").strip()
         # 名字为空时使用"匿名用户"

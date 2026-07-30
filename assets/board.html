@@ -600,6 +600,126 @@
         gap: 10px;
       }
 
+      /* User Auth Styles */
+      .user-auth-container {
+        margin-top: 40px;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .user-auth-form {
+        background: rgba(0, 255, 255, 0.05);
+        border: 1px solid #00ffff;
+        border-radius: 10px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+      }
+
+      .user-auth-form h3 {
+        color: #00ffff;
+        text-shadow: 0 0 10px #00ffff;
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+      }
+
+      .user-auth-form input {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        color: #00ffff;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+
+      .user-auth-form input:focus {
+        outline: none;
+        border-color: #00ffff;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+      }
+
+      .user-auth-form button {
+        width: 100%;
+        padding: 12px;
+        margin-top: 10px;
+        background: rgba(0, 255, 255, 0.2);
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        color: #00ffff;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .user-auth-form button:hover {
+        background: rgba(0, 255, 255, 0.4);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+      }
+
+      .auth-switch {
+        margin-top: 15px;
+        color: #00ffff;
+        font-size: 14px;
+      }
+
+      .auth-switch a {
+        color: #ff00ff;
+        text-decoration: none;
+        margin-left: 5px;
+      }
+
+      .auth-switch a:hover {
+        text-shadow: 0 0 10px #ff00ff;
+      }
+
+      .auth-error {
+        background: rgba(255, 0, 64, 0.2);
+        border: 1px solid #ff0040;
+        color: #ff0040;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+
+      .user-auth-profile {
+        background: rgba(0, 255, 255, 0.05);
+        border: 1px solid #00ffff;
+        border-radius: 10px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        text-align: center;
+      }
+
+      .user-auth-profile h3 {
+        color: #00ffff;
+        text-shadow: 0 0 10px #00ffff;
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+      }
+
+      .user-email {
+        color: #00ff00;
+        font-size: 14px;
+        margin-bottom: 15px;
+        word-break: break-all;
+      }
+
+      .logout-btn {
+        background: rgba(255, 0, 64, 0.2) !important;
+        border-color: #ff0040 !important;
+        color: #ff0040 !important;
+      }
+
+      .logout-btn:hover {
+        background: rgba(255, 0, 64, 0.4) !important;
+        box-shadow: 0 0 15px rgba(255, 0, 64, 0.5) !important;
+      }
+
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -922,6 +1042,39 @@
         <input name="message" placeholder="&gt; 说点什么..." />
         <button type="submit">[ 发送留言 ]</button>
       </form>
+
+      <!-- User Auth Section -->
+      <div class="user-auth-container">
+        <div id="user-auth-login" class="user-auth-form">
+          <h3>// 用户登录</h3>
+          <div id="auth-error" class="auth-error" style="display: none;"></div>
+          <input type="email" id="login-email" placeholder="&gt; 邮箱" />
+          <input type="password" id="login-password" placeholder="&gt; 密码" />
+          <button onclick="handleLogin()">[ 登录 ]</button>
+          <div class="auth-switch">
+            <span>还没有账号？</span>
+            <a href="javascript:void(0)" onclick="showRegister()">[ 注册 ]</a>
+          </div>
+        </div>
+
+        <div id="user-auth-register" class="user-auth-form" style="display: none;">
+          <h3>// 用户注册</h3>
+          <div id="register-error" class="auth-error" style="display: none;"></div>
+          <input type="email" id="register-email" placeholder="&gt; 邮箱" />
+          <input type="password" id="register-password" placeholder="&gt; 密码（至少6位）" />
+          <button onclick="handleRegister()">[ 注册 ]</button>
+          <div class="auth-switch">
+            <span>已有账号？</span>
+            <a href="javascript:void(0)" onclick="showLogin()">[ 登录 ]</a>
+          </div>
+        </div>
+
+        <div id="user-auth-profile" class="user-auth-profile" style="display: none;">
+          <h3>// 欢迎回来</h3>
+          <div class="user-email" id="user-email"></div>
+          <button onclick="handleLogout()" class="logout-btn">[ 退出登录 ]</button>
+        </div>
+      </div>
       {% endif %}
 
       <!-- Admin Button -->
@@ -931,6 +1084,98 @@
     </div>
 
     <script>
+      // ========== User Auth Functions ==========
+      function showAuthForm() {
+        document.getElementById('auth-login').style.display = 'block';
+        document.getElementById('auth-register').style.display = 'none';
+        document.getElementById('auth-error').style.display = 'none';
+        document.getElementById('auth-profile').style.display = 'none';
+      }
+
+      function showRegisterForm() {
+        document.getElementById('auth-login').style.display = 'none';
+        document.getElementById('auth-register').style.display = 'block';
+        document.getElementById('auth-error').style.display = 'none';
+        document.getElementById('auth-profile').style.display = 'none';
+      }
+
+      function showAuthError(msg) {
+        var errorEl = document.getElementById('auth-error');
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+      }
+
+      function hideAuthError() {
+        document.getElementById('auth-error').style.display = 'none';
+      }
+
+      function showUserProfile(email) {
+        document.getElementById('auth-login').style.display = 'none';
+        document.getElementById('auth-register').style.display = 'none';
+        document.getElementById('auth-error').style.display = 'none';
+        document.getElementById('auth-profile').style.display = 'block';
+        document.getElementById('user-email').textContent = email;
+      }
+
+      function hideUserProfile() {
+        document.getElementById('auth-profile').style.display = 'none';
+        document.getElementById('auth-login').style.display = 'block';
+      }
+
+      async function handleUserLogin(e) {
+        e.preventDefault();
+        hideAuthError();
+        var email = document.getElementById('user-email-input').value;
+        var password = document.getElementById('user-password-input').value;
+        try {
+          var resp = await fetch('/api/user/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: password })
+          });
+          var data = await resp.json();
+          if (data.success) {
+            showUserProfile(email);
+          } else {
+            showAuthError(data.message || '登录失败');
+          }
+        } catch (err) {
+          showAuthError('网络错误，请重试');
+        }
+      }
+
+      async function handleUserRegister(e) {
+        e.preventDefault();
+        hideAuthError();
+        var email = document.getElementById('user-email-input').value;
+        var password = document.getElementById('user-password-input').value;
+        try {
+          var resp = await fetch('/api/user/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: password })
+          });
+          var data = await resp.json();
+          if (data.success) {
+            showAuthError('注册成功！请登录');
+            setTimeout(function() { showAuthForm(); }, 2000);
+          } else {
+            showAuthError(data.message || '注册失败');
+          }
+        } catch (err) {
+          showAuthError('网络错误，请重试');
+        }
+      }
+
+      async function handleUserLogout() {
+        try {
+          await fetch('/api/user/logout', { method: 'POST' });
+          hideUserProfile();
+        } catch (err) {
+          console.error('Logout error:', err);
+        }
+      }
+
       // ========== Typewriter Effect for Subtitle ==========
       (function () {
         var text = 'NB\u5230\u7206';
@@ -1070,6 +1315,15 @@
             // 防止重复提交
             if (isSubmitting) {
               e.preventDefault();
+              return;
+            }
+            
+            // 检查用户是否已登录
+            var profileEl = document.getElementById('auth-profile');
+            if (profileEl && profileEl.style.display === 'none') {
+              e.preventDefault();
+              showAuthError('请先登录再留言');
+              document.getElementById('user-auth-container').scrollIntoView({ behavior: 'smooth' });
               return;
             }
             
