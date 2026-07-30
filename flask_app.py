@@ -195,6 +195,102 @@ def admin_delete(index):
         messages.pop(index)
     return redirect("/admin")
 
+# ==================== 公告管理 ====================
+ANNOUNCEMENTS_DIR = os.path.join(BASE_DIR, "assets", "announcements")
+os.makedirs(ANNOUNCEMENTS_DIR, exist_ok=True)
+
+def load_announcements():
+    """加载所有公告"""
+    announcements = []
+    if os.path.exists(ANNOUNCEMENTS_DIR):
+        for filename in os.listdir(ANNOUNCEMENTS_DIR):
+            if filename.endswith('.json'):
+                filepath = os.path.join(ANNOUNCEMENTS_DIR, filename)
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        data['id'] = filename.replace('.json', '')
+                        announcements.append(data)
+                except:
+                    pass
+    # 按时间排序，最新的在前
+    announcements.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    return announcements
+
+def save_announcement(announcement):
+    """保存公告"""
+    announcement_id = str(int(time.time()))
+    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{announcement_id}.json")
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(announcement, f, ensure_ascii=False, indent=2)
+    return announcement_id
+
+@app.route('/api/announcements', methods=['GET'])
+def api_get_announcements():
+    """获取所有公告"""
+    announcements = load_announcements()
+    return jsonify(announcements)
+
+@app.route('/api/announcements', methods=['POST'])
+def api_create_announcement():
+    """创建公告"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '未登录'}), 401
+    
+    data = request.json
+    if not data.get('title') or not data.get('content'):
+        return jsonify({'error': '标题和正文不能为空'}), 400
+    
+    announcement = {
+        'title': data['title'],
+        'content': data['content'],
+        'type': data.get('type', 'normal'),
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    announcement_id = save_announcement(announcement)
+    return jsonify({'id': announcement_id, 'message': '公告创建成功'})
+
+@app.route('/api/announcements/<announcement_id>', methods=['PUT'])
+def api_update_announcement(announcement_id):
+    """更新公告"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '未登录'}), 401
+    
+    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{announcement_id}.json")
+    if not os.path.exists(filepath):
+        return jsonify({'error': '公告不存在'}), 404
+    
+    data = request.json
+    if not data.get('title') or not data.get('content'):
+        return jsonify({'error': '标题和正文不能为空'}), 400
+    
+    announcement = {
+        'id': announcement_id,
+        'title': data['title'],
+        'content': data['content'],
+        'type': data.get('type', 'normal'),
+        'created_at': data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    }
+    
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(announcement, f, ensure_ascii=False, indent=2)
+    
+    return jsonify({'message': '公告更新成功'})
+
+@app.route('/api/announcements/<announcement_id>', methods=['DELETE'])
+def api_delete_announcement(announcement_id):
+    """删除公告"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '未登录'}), 401
+    
+    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{announcement_id}.json")
+    if not os.path.exists(filepath):
+        return jsonify({'error': '公告不存在'}), 404
+    
+    os.remove(filepath)
+    return jsonify({'message': '公告删除成功'})
+
 # 仅开发环境运行
 if __name__ == '__main__':
     port = int(os.environ.get('DEPLOY_RUN_PORT', 5000))
