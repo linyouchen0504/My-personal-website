@@ -302,6 +302,51 @@ def delete_announcement(ann_id):
     os.remove(filepath)
     return jsonify({"success": True})
 
+# Admin announcement form routes
+@app.route('/admin/announcement/add', methods=['POST'])
+def admin_add_announcement():
+    """添加公告（表单提交）"""
+    if not session.get('admin_logged_in'):
+        return redirect("/admin")
+    
+    title = request.form.get('title', '').strip()
+    content = request.form.get('content', '').strip()
+    ann_type = request.form.get('type', 'normal')
+    
+    if not title or not content:
+        return redirect("/admin?error=标题和正文不能为空")
+    
+    # 生成唯一 ID
+    timestamp = int(time.time() * 1000)
+    ann_id = str(timestamp)
+    
+    announcement = {
+        "id": ann_id,
+        "title": title,
+        "content": content,
+        "type": ann_type,
+        "timestamp": timestamp,
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{ann_id}.json")
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(announcement, f, ensure_ascii=False, indent=2)
+    
+    return redirect("/admin")
+
+@app.route('/admin/announcement/delete/<ann_id>', methods=['GET', 'POST'])
+def admin_delete_announcement(ann_id):
+    """删除公告（表单提交）"""
+    if not session.get('admin_logged_in'):
+        return redirect("/admin")
+    
+    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{ann_id}.json")
+    if os.path.isfile(filepath):
+        os.remove(filepath)
+    
+    return redirect("/admin")
+
 # Only run the development server when executed directly (not in WSGI)
 if __name__ == '__main__':
     port = int(os.environ.get('DEPLOY_RUN_PORT', 5000))
