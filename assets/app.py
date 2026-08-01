@@ -153,8 +153,17 @@ def serve_video():
 @app.route('/admin')
 def admin():
     if not session.get('admin_logged_in'):
-        return render_template("board.html", messages=[], admin_login=True, admin_error=None)
-    return render_template("board.html", messages=messages, admin_panel=True)
+        return render_template("board.html", messages=[], admin_login=True, admin_error=None, announcements=[])
+    
+    # 加载公告列表
+    announcements = []
+    for f in sorted(os.listdir(ANNOUNCEMENTS_DIR)):
+        if f.endswith('.json'):
+            with open(os.path.join(ANNOUNCEMENTS_DIR, f), 'r', encoding='utf-8') as file:
+                announcements.append(json.load(file))
+    announcements.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    
+    return render_template("board.html", messages=messages, admin_panel=True, announcements=announcements)
 
 @app.route('/admin/login', methods=["POST"])
 def admin_login():

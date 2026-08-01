@@ -155,7 +155,7 @@ def serve_video():
 def admin():
     if not session.get('admin_logged_in'):
         return render_template("board.html", messages=[], admin_login=True, admin_error=None)
-    return render_template("board.html", messages=messages, admin_panel=True)
+    return render_template("board.html", messages=messages, admin_panel=True, announcements=load_announcements())
 
 @app.route('/admin/login', methods=["POST"])
 def admin_login():
