@@ -216,7 +216,7 @@ def get_announcements():
                     announcements.append(json.load(f))
     # 按时间戳排序，最新的在前
     announcements.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
-    return jsonify(announcements)
+    return jsonify({"success": True, "announcements": announcements})
 
 @app.route('/api/announcements/important', methods=['GET'])
 def get_important_announcements():

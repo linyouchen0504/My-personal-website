@@ -229,7 +229,7 @@ def save_announcement(announcement):
 def api_get_announcements():
     """获取所有公告"""
     announcements = load_announcements()
-    return jsonify(announcements)
+    return jsonify({"success": True, "announcements": announcements})
 
 @app.route('/api/announcements', methods=['POST'])
 def api_create_announcement():
