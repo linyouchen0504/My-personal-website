@@ -407,22 +407,67 @@
 
       /* User Login Link */
       .user-login-link {
-        display: block;
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(10, 10, 20, 0.8);
+        border: 2px solid #00ffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         text-decoration: none;
         transition: all 0.3s ease;
+        z-index: 999;
+        box-shadow: 0 0 15px #00ffff44;
       }
       .user-login-link h6 {
         color: #00ffff;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
-        margin: 12px 0;
+        margin: 0;
         text-shadow: 0 0 8px #00ffff44;
         transition: all 0.3s ease;
+        text-align: center;
+        line-height: 1.2;
+      }
+      .user-login-link:hover {
+        border-color: #ff00ff;
+        box-shadow: 0 0 20px #ff00ff88, 0 0 40px #ff00ff44;
+        transform: scale(1.1);
       }
       .user-login-link:hover h6 {
         color: #ff00ff;
         text-shadow: 0 0 15px #ff00ff88, 0 0 30px #ff00ff44;
-        transform: scale(1.05);
+      }
+
+      /* Login Circle Button */
+      .login-circle-btn {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(0, 255, 255, 0.1);
+        border: 2px solid #00ffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #00ffff;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        z-index: 999;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+      }
+
+      .login-circle-btn:hover {
+        background: rgba(0, 255, 255, 0.2);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+        transform: scale(1.1);
       }
 
       /* Admin Button */
@@ -904,9 +949,6 @@
       <a href="https://gamesafe.qq.com/safety-online.shtml">
         <h5>💖点击传送：进入ACE在线查询💖</h5>
       </a>
-      <a href="/login" class="user-login-link">
-        <h6>💖点击传送：用户登录💖</h6>
-      </a>
       
       <div class="msg-title">// MESSAGE_BOARD</div>
       <div class="msg-list">
@@ -1252,5 +1294,8 @@
         }
       }
     </script>
+
+    <!-- 圆形登录按钮 -->
+    <a href="/login" class="login-circle-btn" title="用户登录">👤</a>
   </body>
 </html>
