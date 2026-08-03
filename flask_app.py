@@ -155,7 +155,7 @@ def serve_video():
 def admin():
     if not session.get('admin_logged_in'):
         return render_template("board.html", messages=[], admin_login=True, admin_error=None)
-    return render_template("board.html", messages=messages, admin_panel=True, announcements=load_announcements())
+    return render_template("board.html", messages=messages, admin_panel=True)
 
 @app.route('/admin/login', methods=["POST"])
 def admin_login():
@@ -229,7 +229,7 @@ def save_announcement(announcement):
 def api_get_announcements():
     """获取所有公告"""
     announcements = load_announcements()
-    return jsonify({"success": True, "announcements": announcements})
+    return jsonify(announcements)
 
 @app.route('/api/announcements', methods=['POST'])
 def api_create_announcement():
@@ -290,52 +290,6 @@ def api_delete_announcement(announcement_id):
     
     os.remove(filepath)
     return jsonify({'message': '公告删除成功'})
-
-@app.route('/admin/announcement/add', methods=['POST'])
-def admin_add_announcement():
-    """添加公告（表单提交）"""
-    if not session.get('admin_logged_in'):
-        return redirect('/admin')
-    
-    title = request.form.get('title', '').strip()
-    content = request.form.get('content', '').strip()
-    ann_type = request.form.get('type', 'normal')
-    
-    if not title or not content:
-        return redirect('/admin?error=公告标题和正文不能为空')
-    
-    if ann_type not in ['normal', 'important']:
-        ann_type = 'normal'
-    
-    announcements = get_announcements()
-    new_id = max([a['id'] for a in announcements], default=0) + 1
-    
-    announcement = {
-        'id': new_id,
-        'title': title,
-        'content': content,
-        'type': ann_type,
-        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }
-    
-    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{new_id}.json")
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(announcement, f, ensure_ascii=False, indent=2)
-    
-    return redirect('/admin')
-
-@app.route('/admin/announcement/delete/<int:announcement_id>', methods=['GET', 'POST'])
-def admin_delete_announcement(announcement_id):
-    """删除公告（表单提交）"""
-    if not session.get('admin_logged_in'):
-        return redirect('/admin')
-    
-    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{announcement_id}.json")
-    if not os.path.exists(filepath):
-        return redirect('/admin?error=公告不存在')
-    
-    os.remove(filepath)
-    return redirect('/admin')
 
 # 仅开发环境运行
 if __name__ == '__main__':

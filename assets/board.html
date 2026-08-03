@@ -1657,7 +1657,7 @@
           return;
         }
 
-        island.style.display = '';
+        island.style.display = 'block';
         list.innerHTML = '';
 
         announcements.forEach(function (ann) {
@@ -1690,7 +1690,7 @@
       function toggleAnnouncementPanel() {
         var panel = document.getElementById('announcement-panel');
         announcementPanelOpen = !announcementPanelOpen;
-        panel.classList.toggle('show', announcementPanelOpen);
+        panel.classList.toggle('open', announcementPanelOpen);
       }
 
       function closeImportantAnnouncement() {

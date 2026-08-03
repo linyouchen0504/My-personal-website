@@ -153,17 +153,8 @@ def serve_video():
 @app.route('/admin')
 def admin():
     if not session.get('admin_logged_in'):
-        return render_template("board.html", messages=[], admin_login=True, admin_error=None, announcements=[])
-    
-    # 加载公告列表
-    announcements = []
-    for f in sorted(os.listdir(ANNOUNCEMENTS_DIR)):
-        if f.endswith('.json'):
-            with open(os.path.join(ANNOUNCEMENTS_DIR, f), 'r', encoding='utf-8') as file:
-                announcements.append(json.load(file))
-    announcements.sort(key=lambda x: x.get('created_at', ''), reverse=True)
-    
-    return render_template("board.html", messages=messages, admin_panel=True, announcements=announcements)
+        return render_template("board.html", messages=[], admin_login=True, admin_error=None)
+    return render_template("board.html", messages=messages, admin_panel=True)
 
 @app.route('/admin/login', methods=["POST"])
 def admin_login():
@@ -216,7 +207,7 @@ def get_announcements():
                     announcements.append(json.load(f))
     # 按时间戳排序，最新的在前
     announcements.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
-    return jsonify({"success": True, "announcements": announcements})
+    return jsonify(announcements)
 
 @app.route('/api/announcements/important', methods=['GET'])
 def get_important_announcements():
@@ -310,51 +301,6 @@ def delete_announcement(ann_id):
     
     os.remove(filepath)
     return jsonify({"success": True})
-
-# Admin announcement form routes
-@app.route('/admin/announcement/add', methods=['POST'])
-def admin_add_announcement():
-    """添加公告（表单提交）"""
-    if not session.get('admin_logged_in'):
-        return redirect("/admin")
-    
-    title = request.form.get('title', '').strip()
-    content = request.form.get('content', '').strip()
-    ann_type = request.form.get('type', 'normal')
-    
-    if not title or not content:
-        return redirect("/admin?error=标题和正文不能为空")
-    
-    # 生成唯一 ID
-    timestamp = int(time.time() * 1000)
-    ann_id = str(timestamp)
-    
-    announcement = {
-        "id": ann_id,
-        "title": title,
-        "content": content,
-        "type": ann_type,
-        "timestamp": timestamp,
-        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-    
-    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{ann_id}.json")
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(announcement, f, ensure_ascii=False, indent=2)
-    
-    return redirect("/admin")
-
-@app.route('/admin/announcement/delete/<ann_id>', methods=['GET', 'POST'])
-def admin_delete_announcement(ann_id):
-    """删除公告（表单提交）"""
-    if not session.get('admin_logged_in'):
-        return redirect("/admin")
-    
-    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{ann_id}.json")
-    if os.path.isfile(filepath):
-        os.remove(filepath)
-    
-    return redirect("/admin")
 
 # Only run the development server when executed directly (not in WSGI)
 if __name__ == '__main__':
