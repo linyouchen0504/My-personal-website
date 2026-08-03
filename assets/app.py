@@ -11,6 +11,7 @@ from flask import Flask, render_template, request, redirect, jsonify, send_file,
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr, formatdate, make_msgid
+from supabase import create_client, Client
 
 # Robust path resolution that works in both development and WSGI environments
 # When running directly: __file__ is assets/app.py, so BASE_DIR is assets/
@@ -25,6 +26,14 @@ if not os.path.isdir(TEMPLATE_FOLDER):
 app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
 app.secret_key = os.urandom(24)
 
+# Supabase 配置
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', '')
+SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
+
+# 初始化 Supabase 客户端
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY) if SUPABASE_URL and SUPABASE_ANON_KEY else None
+
 # Admin credentials (password hashed with SHA-256)
 ADMIN_USERNAME = "linyouchen0504"
 ADMIN_PASSWORD_HASH = hashlib.sha256("l28034414".encode()).hexdigest()
@@ -35,11 +44,6 @@ if not os.path.isfile(TEMPLATE_FILE):
     raise RuntimeError(f"Template file not found: {TEMPLATE_FILE}")
 
 messages = []
-
-# Announcements directory
-ANNOUNCEMENTS_DIR = os.path.join(BASE_DIR, 'announcements')
-if not os.path.isdir(ANNOUNCEMENTS_DIR):
-    os.makedirs(ANNOUNCEMENTS_DIR)
 
 def get_email_config():
     """获取邮件配置信息"""
@@ -113,6 +117,10 @@ def home():
 @app.route('/post', methods=["POST"])
 def post():
     try:
+        # 检查用户是否已登录
+        if 'user_email' not in session:
+            return redirect('/')
+        
         name = request.form.get("name", "").strip()
         msg = request.form.get("message", "").strip()
         # 名字为空时使用"匿名用户"
@@ -148,6 +156,109 @@ def serve_video():
     if os.path.isfile(video_path):
         return send_file(video_path, mimetype='video/mp4')
     return "Video not found", 404
+
+# Supabase Auth routes
+@app.route('/api/supabase-config')
+def supabase_config():
+    """获取 Supabase 配置（公开接口，仅返回 URL 和 anon key）"""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        return jsonify({"error": "Supabase credentials not configured"}), 500
+    return jsonify({"url": SUPABASE_URL, "anonKey": SUPABASE_ANON_KEY})
+
+@app.route('/api/auth/signup', methods=["POST"])
+def auth_signup():
+    """用户注册"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+        
+        if not email or not password:
+            return jsonify({"error": "邮箱和密码不能为空"}), 400
+        
+        if not supabase:
+            return jsonify({"error": "Supabase 未配置"}), 500
+        
+        response = supabase.auth.sign_up({"email": email, "password": password})
+        
+        if response.user:
+            return jsonify({"message": "注册成功", "user": {"email": response.user.email}})
+        else:
+            return jsonify({"error": "注册失败"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/auth/login', methods=["POST"])
+def auth_login():
+    """用户登录"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+        
+        if not email or not password:
+            return jsonify({"error": "邮箱和密码不能为空"}), 400
+        
+        if not supabase:
+            return jsonify({"error": "Supabase 未配置"}), 500
+        
+        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        
+        if response.session:
+            return jsonify({
+                "message": "登录成功",
+                "session": {
+                    "access_token": response.session.access_token,
+                    "refresh_token": response.session.refresh_token,
+                    "user": {"email": response.user.email}
+                }
+            })
+        else:
+            return jsonify({"error": "登录失败"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/auth/logout', methods=["POST"])
+def auth_logout():
+    """用户登出"""
+    try:
+        if not supabase:
+            return jsonify({"error": "Supabase 未配置"}), 500
+        
+        # 从 header 获取 token
+        token = request.headers.get('x-session', '')
+        if token:
+            supabase.auth.set_session(token, '')
+            supabase.auth.sign_out()
+        
+        return jsonify({"message": "登出成功"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/auth/verify', methods=["POST"])
+def auth_verify():
+    """验证登录态"""
+    try:
+        token = request.headers.get('x-session', '')
+        if not token:
+            return jsonify({"authenticated": False, "error": "未提供 token"}), 401
+        
+        if not supabase:
+            return jsonify({"authenticated": False, "error": "Supabase 未配置"}), 500
+        
+        # 使用 service key 验证 token
+        service_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY) if SUPABASE_SERVICE_KEY else supabase
+        user_response = service_client.auth.get_user(token)
+        
+        if user_response.user:
+            return jsonify({
+                "authenticated": True,
+                "user": {"email": user_response.user.email}
+            })
+        else:
+            return jsonify({"authenticated": False, "error": "token 无效"}), 401
+    except Exception as e:
+        return jsonify({"authenticated": False, "error": str(e)}), 401
 
 # Admin routes
 @app.route('/admin')
@@ -193,114 +304,6 @@ def admin_delete(index):
     if 0 <= index < len(messages):
         messages.pop(index)
     return redirect("/admin")
-
-# Announcement routes
-@app.route('/api/announcements', methods=['GET'])
-def get_announcements():
-    """获取所有公告"""
-    announcements = []
-    if os.path.isdir(ANNOUNCEMENTS_DIR):
-        for filename in os.listdir(ANNOUNCEMENTS_DIR):
-            if filename.endswith('.json'):
-                filepath = os.path.join(ANNOUNCEMENTS_DIR, filename)
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    announcements.append(json.load(f))
-    # 按时间戳排序，最新的在前
-    announcements.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
-    return jsonify(announcements)
-
-@app.route('/api/announcements/important', methods=['GET'])
-def get_important_announcements():
-    """获取所有重要公告（用于首页弹窗）"""
-    announcements = []
-    if os.path.isdir(ANNOUNCEMENTS_DIR):
-        for filename in os.listdir(ANNOUNCEMENTS_DIR):
-            if filename.endswith('.json'):
-                filepath = os.path.join(ANNOUNCEMENTS_DIR, filename)
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    announcement = json.load(f)
-                    if announcement.get('type') == 'important':
-                        announcements.append(announcement)
-    # 按时间戳排序，最新的在前
-    announcements.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
-    return jsonify(announcements)
-
-@app.route('/api/announcements', methods=['POST'])
-def add_announcement():
-    """添加新公告"""
-    if not session.get('admin_logged_in'):
-        return jsonify({"error": "未登录"}), 401
-    
-    data = request.get_json()
-    title = data.get('title', '').strip()
-    content = data.get('content', '').strip()
-    ann_type = data.get('type', 'normal')  # 'normal' or 'important'
-    
-    if not title or not content:
-        return jsonify({"error": "标题和正文不能为空"}), 400
-    
-    # 生成唯一 ID
-    timestamp = int(time.time() * 1000)
-    ann_id = str(timestamp)
-    
-    announcement = {
-        "id": ann_id,
-        "title": title,
-        "content": content,
-        "type": ann_type,
-        "timestamp": timestamp,
-        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-    
-    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{ann_id}.json")
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(announcement, f, ensure_ascii=False, indent=2)
-    
-    return jsonify(announcement), 201
-
-@app.route('/api/announcements/<ann_id>', methods=['PUT'])
-def update_announcement(ann_id):
-    """更新公告"""
-    if not session.get('admin_logged_in'):
-        return jsonify({"error": "未登录"}), 401
-    
-    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{ann_id}.json")
-    if not os.path.isfile(filepath):
-        return jsonify({"error": "公告不存在"}), 404
-    
-    data = request.get_json()
-    title = data.get('title', '').strip()
-    content = data.get('content', '').strip()
-    ann_type = data.get('type', 'normal')
-    
-    if not title or not content:
-        return jsonify({"error": "标题和正文不能为空"}), 400
-    
-    with open(filepath, 'r', encoding='utf-8') as f:
-        announcement = json.load(f)
-    
-    announcement['title'] = title
-    announcement['content'] = content
-    announcement['type'] = ann_type
-    announcement['updated_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(announcement, f, ensure_ascii=False, indent=2)
-    
-    return jsonify(announcement)
-
-@app.route('/api/announcements/<ann_id>', methods=['DELETE'])
-def delete_announcement(ann_id):
-    """删除公告"""
-    if not session.get('admin_logged_in'):
-        return jsonify({"error": "未登录"}), 401
-    
-    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{ann_id}.json")
-    if not os.path.isfile(filepath):
-        return jsonify({"error": "公告不存在"}), 404
-    
-    os.remove(filepath)
-    return jsonify({"success": True})
 
 # Only run the development server when executed directly (not in WSGI)
 if __name__ == '__main__':
