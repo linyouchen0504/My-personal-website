@@ -405,6 +405,26 @@
         }
       }
 
+      /* User Login Link */
+      .user-login-link {
+        display: block;
+        text-decoration: none;
+        transition: all 0.3s ease;
+      }
+      .user-login-link h6 {
+        color: #00ffff;
+        font-size: 14px;
+        font-weight: 600;
+        margin: 12px 0;
+        text-shadow: 0 0 8px #00ffff44;
+        transition: all 0.3s ease;
+      }
+      .user-login-link:hover h6 {
+        color: #ff00ff;
+        text-shadow: 0 0 15px #ff00ff88, 0 0 30px #ff00ff44;
+        transform: scale(1.05);
+      }
+
       /* Admin Button */
       .admin-btn {
         position: fixed;
@@ -883,6 +903,9 @@
       </a>
       <a href="https://gamesafe.qq.com/safety-online.shtml">
         <h5>💖点击传送：进入ACE在线查询💖</h5>
+      </a>
+      <a href="/login" class="user-login-link">
+        <h6>💖点击传送：用户登录💖</h6>
       </a>
       
       <div class="msg-title">// MESSAGE_BOARD</div>

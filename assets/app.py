@@ -11,6 +11,7 @@ from flask import Flask, render_template, request, redirect, jsonify, send_file,
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr, formatdate, make_msgid
+from supabase import create_client, Client
 
 # Robust path resolution that works in both development and WSGI environments
 # When running directly: __file__ is assets/app.py, so BASE_DIR is assets/
@@ -24,6 +25,11 @@ if not os.path.isdir(TEMPLATE_FOLDER):
 
 app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
 app.secret_key = os.urandom(24)
+
+# Supabase 配置
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', '')
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY) if SUPABASE_URL and SUPABASE_ANON_KEY else None
 
 # Admin credentials (password hashed with SHA-256)
 ADMIN_USERNAME = "linyouchen0504"
@@ -129,6 +135,46 @@ def post():
 def internal_error(error):
     traceback.print_exc()
     return f"Internal Server Error: {str(error)}", 500
+
+# 用户登录路由
+@app.route('/login')
+def login():
+    return render_template("login.html", supabase_url=SUPABASE_URL, supabase_anon_key=SUPABASE_ANON_KEY)
+
+@app.route('/api/auth/callback', methods=['POST'])
+def auth_callback():
+    """处理 Supabase Auth 回调"""
+    try:
+        data = request.json
+        token = data.get('token')
+        if not token:
+            return jsonify({"error": "No token provided"}), 400
+        
+        # 验证 token
+        user = supabase.auth.get_user(token)
+        if user:
+            session['user_id'] = user.user.id
+            session['user_email'] = user.user.email
+            return jsonify({"success": True, "user": {"email": user.user.email}})
+        return jsonify({"error": "Invalid token"}), 401
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/auth/logout', methods=['POST'])
+def auth_logout():
+    """用户登出"""
+    session.pop('user_id', None)
+    session.pop('user_email', None)
+    return jsonify({"success": True})
+
+@app.route('/api/auth/user')
+def get_user():
+    """获取当前用户信息"""
+    user_id = session.get('user_id')
+    if user_id:
+        return jsonify({"user": {"id": user_id, "email": session.get('user_email')}})
+    return jsonify({"user": None})
 
 @app.route('/audio')
 def serve_audio():
