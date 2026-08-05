@@ -39,8 +39,25 @@ app = Flask(__name__, template_folder=template_folder)
 app.secret_key = os.urandom(24)
 
 # Supabase 配置
-SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
-SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', '')
+def get_supabase_config():
+    """获取 Supabase 配置，优先从环境变量获取，其次从 coze_workload_identity 获取"""
+    url = os.environ.get('SUPABASE_URL', '')
+    key = os.environ.get('SUPABASE_ANON_KEY', '')
+    
+    # 如果环境变量未设置，尝试从 coze_workload_identity 获取
+    if not url or not key:
+        try:
+            from coze_workload_identity import Client
+            client = Client()
+            credential = json.loads(client.get_integration_credential("integration-supabase"))
+            url = credential.get("url", url)
+            key = credential.get("anon_key", key)
+        except Exception as e:
+            print(f"获取 Supabase 配置失败：{e}")
+    
+    return url, key
+
+SUPABASE_URL, SUPABASE_ANON_KEY = get_supabase_config()
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY) if SUPABASE_URL and SUPABASE_ANON_KEY else None
 
 # Admin credentials (password hashed with SHA-256)
