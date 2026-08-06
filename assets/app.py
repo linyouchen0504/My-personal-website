@@ -29,8 +29,8 @@ app.secret_key = os.urandom(24)
 # Supabase 配置
 def get_supabase_config():
     """获取 Supabase 配置，优先从环境变量获取，其次从 coze_workload_identity 获取"""
-    url = os.environ.get('SUPABASE_URL', '')
-    key = os.environ.get('SUPABASE_ANON_KEY', '')
+    url = os.environ.get('COZE_SUPABASE_URL', '')
+    key = os.environ.get('COZE_SUPABASE_ANON_KEY', '')
     
     # 如果环境变量未设置，尝试从 coze_workload_identity 获取
     if not url or not key:
