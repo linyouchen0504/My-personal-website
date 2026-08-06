@@ -196,7 +196,11 @@ def admin_delete(index):
     return redirect("/admin")
 
 # ==================== 公告管理 ====================
-ANNOUNCEMENTS_DIR = os.path.join(BASE_DIR, "assets", "announcements")
+# Use /tmp in production (read-only filesystem)
+if os.environ.get('COZE_PROJECT_ENV') == 'PROD':
+    ANNOUNCEMENTS_DIR = '/tmp/announcements'
+else:
+    ANNOUNCEMENTS_DIR = os.path.join(BASE_DIR, "assets", "announcements")
 os.makedirs(ANNOUNCEMENTS_DIR, exist_ok=True)
 
 def load_announcements():

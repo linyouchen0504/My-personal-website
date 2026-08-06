@@ -36,8 +36,11 @@ if not os.path.isfile(TEMPLATE_FILE):
 
 messages = []
 
-# Announcements directory
-ANNOUNCEMENTS_DIR = os.path.join(BASE_DIR, 'announcements')
+# Announcements directory - use /tmp in production (read-only filesystem)
+if os.environ.get('COZE_PROJECT_ENV') == 'PROD':
+    ANNOUNCEMENTS_DIR = '/tmp/announcements'
+else:
+    ANNOUNCEMENTS_DIR = os.path.join(BASE_DIR, 'announcements')
 if not os.path.isdir(ANNOUNCEMENTS_DIR):
     os.makedirs(ANNOUNCEMENTS_DIR)
 
