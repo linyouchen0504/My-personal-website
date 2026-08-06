@@ -7,11 +7,10 @@ import traceback
 import hashlib
 import requests
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, send_file, session, jsonify
+from flask import Flask, render_template, request, redirect, send_file, session
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr, formatdate, make_msgid
-from supabase import create_client, Client
 
 # PythonAnywhere 部署：模板文件应该放在 templates 目录中
 # 获取当前文件所在目录
@@ -37,28 +36,6 @@ if template_folder is None:
 
 app = Flask(__name__, template_folder=template_folder)
 app.secret_key = os.urandom(24)
-
-# Supabase 配置
-def get_supabase_config():
-    """获取 Supabase 配置，优先从环境变量获取，其次从 coze_workload_identity 获取"""
-    url = os.environ.get('COZE_SUPABASE_URL', '')
-    key = os.environ.get('COZE_SUPABASE_ANON_KEY', '')
-    
-    # 如果环境变量未设置，尝试从 coze_workload_identity 获取
-    if not url or not key:
-        try:
-            from coze_workload_identity import Client
-            client = Client()
-            credential = json.loads(client.get_integration_credential("integration-supabase"))
-            url = credential.get("url", url)
-            key = credential.get("anon_key", key)
-        except Exception as e:
-            print(f"获取 Supabase 配置失败：{e}")
-    
-    return url, key
-
-SUPABASE_URL, SUPABASE_ANON_KEY = get_supabase_config()
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY) if SUPABASE_URL and SUPABASE_ANON_KEY else None
 
 # Admin credentials (password hashed with SHA-256)
 ADMIN_USERNAME = "linyouchen0504"
@@ -159,46 +136,6 @@ def internal_error(error):
     traceback.print_exc()
     return f"Internal Server Error: {str(error)}", 500
 
-# 用户登录路由
-@app.route('/login')
-def login():
-    return render_template("login.html", supabase_url=SUPABASE_URL, supabase_anon_key=SUPABASE_ANON_KEY)
-
-@app.route('/api/auth/callback', methods=['POST'])
-def auth_callback():
-    """处理 Supabase Auth 回调"""
-    try:
-        data = request.json
-        token = data.get('token')
-        if not token:
-            return jsonify({"error": "No token provided"}), 400
-        
-        # 验证 token
-        user = supabase.auth.get_user(token)
-        if user:
-            session['user_id'] = user.user.id
-            session['user_email'] = user.user.email
-            return jsonify({"success": True, "user": {"email": user.user.email}})
-        return jsonify({"error": "Invalid token"}), 401
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/auth/logout', methods=['POST'])
-def auth_logout():
-    """用户登出"""
-    session.pop('user_id', None)
-    session.pop('user_email', None)
-    return jsonify({"success": True})
-
-@app.route('/api/auth/user')
-def get_user():
-    """获取当前用户信息"""
-    user_id = session.get('user_id')
-    if user_id:
-        return jsonify({"user": {"id": user_id, "email": session.get('user_email')}})
-    return jsonify({"user": None})
-
 @app.route('/audio')
 def serve_audio():
     audio_path = os.path.join(BASE_DIR, "assets", "Samuel Kim、Lorien - I Really Want to Stay at Your House.mp3")
@@ -218,7 +155,7 @@ def serve_video():
 def admin():
     if not session.get('admin_logged_in'):
         return render_template("board.html", messages=[], admin_login=True, admin_error=None)
-    return render_template("board.html", messages=messages, admin_panel=True)
+    return render_template("board.html", messages=messages, admin_panel=True, announcements=load_announcements())
 
 @app.route('/admin/login', methods=["POST"])
 def admin_login():
@@ -257,6 +194,148 @@ def admin_delete(index):
     if 0 <= index < len(messages):
         messages.pop(index)
     return redirect("/admin")
+
+# ==================== 公告管理 ====================
+ANNOUNCEMENTS_DIR = os.path.join(BASE_DIR, "assets", "announcements")
+os.makedirs(ANNOUNCEMENTS_DIR, exist_ok=True)
+
+def load_announcements():
+    """加载所有公告"""
+    announcements = []
+    if os.path.exists(ANNOUNCEMENTS_DIR):
+        for filename in os.listdir(ANNOUNCEMENTS_DIR):
+            if filename.endswith('.json'):
+                filepath = os.path.join(ANNOUNCEMENTS_DIR, filename)
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        data['id'] = filename.replace('.json', '')
+                        announcements.append(data)
+                except:
+                    pass
+    # 按时间排序，最新的在前
+    announcements.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    return announcements
+
+def save_announcement(announcement):
+    """保存公告"""
+    announcement_id = str(int(time.time()))
+    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{announcement_id}.json")
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(announcement, f, ensure_ascii=False, indent=2)
+    return announcement_id
+
+@app.route('/api/announcements', methods=['GET'])
+def api_get_announcements():
+    """获取所有公告"""
+    announcements = load_announcements()
+    return jsonify({"success": True, "announcements": announcements})
+
+@app.route('/api/announcements', methods=['POST'])
+def api_create_announcement():
+    """创建公告"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '未登录'}), 401
+    
+    data = request.json
+    if not data.get('title') or not data.get('content'):
+        return jsonify({'error': '标题和正文不能为空'}), 400
+    
+    announcement = {
+        'title': data['title'],
+        'content': data['content'],
+        'type': data.get('type', 'normal'),
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    announcement_id = save_announcement(announcement)
+    return jsonify({'id': announcement_id, 'message': '公告创建成功'})
+
+@app.route('/api/announcements/<announcement_id>', methods=['PUT'])
+def api_update_announcement(announcement_id):
+    """更新公告"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '未登录'}), 401
+    
+    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{announcement_id}.json")
+    if not os.path.exists(filepath):
+        return jsonify({'error': '公告不存在'}), 404
+    
+    data = request.json
+    if not data.get('title') or not data.get('content'):
+        return jsonify({'error': '标题和正文不能为空'}), 400
+    
+    announcement = {
+        'id': announcement_id,
+        'title': data['title'],
+        'content': data['content'],
+        'type': data.get('type', 'normal'),
+        'created_at': data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    }
+    
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(announcement, f, ensure_ascii=False, indent=2)
+    
+    return jsonify({'message': '公告更新成功'})
+
+@app.route('/api/announcements/<announcement_id>', methods=['DELETE'])
+def api_delete_announcement(announcement_id):
+    """删除公告"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': '未登录'}), 401
+    
+    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{announcement_id}.json")
+    if not os.path.exists(filepath):
+        return jsonify({'error': '公告不存在'}), 404
+    
+    os.remove(filepath)
+    return jsonify({'message': '公告删除成功'})
+
+@app.route('/admin/announcement/add', methods=['POST'])
+def admin_add_announcement():
+    """添加公告（表单提交）"""
+    if not session.get('admin_logged_in'):
+        return redirect('/admin')
+    
+    title = request.form.get('title', '').strip()
+    content = request.form.get('content', '').strip()
+    ann_type = request.form.get('type', 'normal')
+    
+    if not title or not content:
+        return redirect('/admin?error=公告标题和正文不能为空')
+    
+    if ann_type not in ['normal', 'important']:
+        ann_type = 'normal'
+    
+    announcements = get_announcements()
+    new_id = max([a['id'] for a in announcements], default=0) + 1
+    
+    announcement = {
+        'id': new_id,
+        'title': title,
+        'content': content,
+        'type': ann_type,
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{new_id}.json")
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(announcement, f, ensure_ascii=False, indent=2)
+    
+    return redirect('/admin')
+
+@app.route('/admin/announcement/delete/<int:announcement_id>', methods=['GET', 'POST'])
+def admin_delete_announcement(announcement_id):
+    """删除公告（表单提交）"""
+    if not session.get('admin_logged_in'):
+        return redirect('/admin')
+    
+    filepath = os.path.join(ANNOUNCEMENTS_DIR, f"{announcement_id}.json")
+    if not os.path.exists(filepath):
+        return redirect('/admin?error=公告不存在')
+    
+    os.remove(filepath)
+    return redirect('/admin')
 
 # 仅开发环境运行
 if __name__ == '__main__':
