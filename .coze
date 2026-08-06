@@ -2,9 +2,9 @@
 requires = ["nodejs-24"]
 
 [dev]
-build = ["pip", "install", "flask"]
+build = ["pip", "install", "-r", "requirements.txt"]
 run = ["python", "assets/app.py"]
 
 [deploy]
-build = ["pip", "install", "flask"]
+build = ["pip", "install", "-r", "requirements.txt"]
 run = ["python", "assets/app.py"]
