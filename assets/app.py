@@ -145,13 +145,6 @@ def serve_audio():
         return send_file(audio_path, mimetype='audio/mpeg')
     return "Audio not found", 404
 
-@app.route('/video')
-def serve_video():
-    video_path = os.path.join(BASE_DIR, "原神 《云·原神》动画短片——第二篇 来来来来，来进入《云·原神》！一键开启异世冒险！ 演唱：多多、宴宁 - 抖音.mp4")
-    if os.path.isfile(video_path):
-        return send_file(video_path, mimetype='video/mp4')
-    return "Video not found", 404
-
 # Admin routes
 @app.route('/admin')
 def admin():
