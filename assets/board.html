@@ -405,6 +405,17 @@
         }
       }
 
+      @keyframes toastFadeIn {
+        0% {
+          opacity: 0;
+          transform: translateX(-50%) translateY(-20px) scale(0.9);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0) scale(1);
+        }
+      }
+
       /* Admin Button */
       .admin-btn {
         position: fixed;
@@ -1173,20 +1184,7 @@
       </div>
     </div>
 
-    <!-- Video Egg Modal -->
-    <div class="cyber-modal-overlay" id="video-egg-modal" style="display: none;">
-      <div class="cyber-modal cyber-modal-egg">
-        <div class="cyber-modal-title">// 你触发了一个彩蛋！</div>
-        <div class="cyber-modal-body">
-          <video id="genshin-video" controls style="width: 100%; max-height: 400px; border-radius: 8px; margin: 8px 0;">
-            <source src="https://v11-weba.douyinvod.com/f6f88516fa54d8569864327c75b235fb/6a75a5a2/video/tos/cn/tos-cn-ve-15/ogzQD4u4D8AvYygAI2FnIfe9fZNN0AVmfC6bEu/?a=6383&ch=26&cr=3&dr=0&lr=all&cd=0%7C0%7C0%7C3&cv=1&br=1079&bt=1079&cs=0&ds=4&ft=pEaFx4hZffPdr5~-vvVNvAq-antLjrKoLnJuRkabIh.5ejVhWL6&mime_type=video_mp4&qs=0&rc=ZTVlNWk6ODY3ZWlmOGQ7aEBpM2Z3eTM6ZjppbzMzNGkzM0AvX2AuLjYwNV8xM19eMDM2YSNycWkycjRvcW1gLS1kLS9zcw%3D%3D&btag=c0000e00020000&cquery=100o_100w_100B_100H_100K&dy_q=1786084158&feature_id=46a7bb47b4fd1280f3d3825bf2b29388&l=2026080714291848520CB42C4ED90CCEA0&testst=1786084165634" type="video/mp4">
-          </video>
-        </div>
-        <div class="cyber-modal-buttons" style="justify-content: center;">
-          <button class="cyber-modal-btn-close" onclick="closeVideoModal()">关闭</button>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- Main Content -->
     <div class="content-wrapper">
@@ -1308,12 +1306,22 @@
       {% endif %}
 
       {% if play_video %}
+      <div id="video-egg-toast" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 99999; background: rgba(0, 255, 255, 0.15); border: 1px solid #0ff; border-radius: 12px; padding: 16px 32px; backdrop-filter: blur(12px); box-shadow: 0 0 30px rgba(0, 255, 255, 0.3); text-align: center; animation: toastFadeIn 0.5s ease;">
+        <span style="color: #0ff; font-family: 'Courier New', monospace; font-size: 18px; text-shadow: 0 0 10px rgba(0,255,255,0.5);">你触发了一个彩蛋，4秒后跳转</span>
+      </div>
       <script>
         (function() {
-          var modal = document.getElementById('video-egg-modal');
-          if (modal) {
-            modal.style.display = 'flex';
-          }
+          var videoUrl = "https://v11-weba.douyinvod.com/f6f88516fa54d8569864327c75b235fb/6a75a5a2/video/tos/cn/tos-cn-ve-15/ogzQD4u4D8AvYygAI2FnIfe9fZNN0AVmfC6bEu/?a=6383&ch=26&cr=3&dr=0&lr=all&cd=0%7C0%7C0%7C3&cv=1&br=1079&bt=1079&cs=0&ds=4&ft=pEaFx4hZffPdr5~-vvVNvAq-antLjrKoLnJuRkabIh.5ejVhWL6&mime_type=video_mp4&qs=0&rc=ZTVlNWk6ODY3ZWlmOGQ7aEBpM2Z3eTM6ZjppbzMzNGkzM0AvX2AuLjYwNV8xM19eMDM2YSNycWkycjRvcW1gLS1kLS9zcw%3D%3D&btag=c0000e00020000&cquery=100o_100w_100B_100H_100K&dy_q=1786084158&feature_id=46a7bb47b4fd1280f3d3825bf2b29388&l=2026080714291848520CB42C4ED90CCEA0&testst=1786084165634";
+          setTimeout(function() {
+            var toast = document.getElementById('video-egg-toast');
+            if (toast) {
+              toast.style.transition = 'opacity 0.5s ease';
+              toast.style.opacity = '0';
+            }
+            setTimeout(function() {
+              window.location.href = videoUrl;
+            }, 500);
+          }, 4000);
         })();
       </script>
       {% endif %}
@@ -1561,20 +1569,7 @@
         }, 250);
       }
 
-      function closeVideoModal() {
-        var modalOverlay = document.getElementById('video-egg-modal');
-        var video = document.getElementById('genshin-video');
-        if (video) {
-          video.pause();
-          video.currentTime = 0;
-        }
-        var modalContent = modalOverlay.querySelector('.cyber-modal');
-        modalContent.classList.add('closing');
-        setTimeout(function() {
-          modalOverlay.style.display = 'none';
-          modalContent.classList.remove('closing');
-        }, 250);
-      }
+      
       
       function rejectACE() {
         closeModal();
